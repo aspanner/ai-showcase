@@ -1,0 +1,98 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vlm-demo
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vlm-demo-app
+  namespace: vlm-demo
+  labels:
+    app: vlm-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vlm-demo
+  template:
+    metadata:
+      labels:
+        app: vlm-demo
+    spec:
+      containers:
+      - name: web
+        image: quay.io/rh_ee_micyang/vlm-demo-rh126:0.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+              - ALL
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vlm-demo-service
+  namespace: vlm-demo
+  labels:
+    app: vlm-demo
+spec:
+  selector:
+    app: vlm-demo
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  type: ClusterIP
+
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: vlm-demo-route
+  namespace: vlm-demo
+  labels:
+    app: vlm-demo
+spec:
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: vlm-demo-service
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+

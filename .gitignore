@@ -1,0 +1,12 @@
+# Sensitive files - do not commit
+access_token.txt
+hf_token.txt
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+

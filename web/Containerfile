@@ -1,0 +1,180 @@
+# Web Server Container - Serves the frontend and proxies API calls
+# Built from Red Hat UBI 9 Minimal for optimal image size
+FROM registry.redhat.io/ubi9-minimal:latest
+
+# Switch to root to install packages and configure
+USER 0
+
+# Install nginx and dependencies using microdnf (minimal package manager)
+# Note: curl-minimal is already included in ubi9-minimal and sufficient for health checks
+RUN microdnf install -y nginx shadow-utils \
+    && microdnf clean all \
+    && rm -rf /var/cache/yum
+
+# Create nginx user and group if they don't exist (typically UID/GID 1001)
+RUN if ! getent group nginx; then groupadd -r nginx -g 1001; fi \
+    && if ! getent passwd nginx; then useradd -r -u 1001 -g nginx -s /sbin/nologin -c "Nginx web server" nginx; fi
+
+# Create app directory and nginx cache directories with proper permissions
+RUN mkdir -p /app/web /tmp/nginx /tmp/nginx/client_temp /tmp/nginx/proxy_temp \
+    /tmp/nginx/fastcgi_temp /tmp/nginx/uwsgi_temp /tmp/nginx/scgi_temp \
+    /var/log/nginx /var/lib/nginx \
+    && chmod -R 777 /tmp/nginx /var/run /var/log/nginx /var/lib/nginx \
+    && chown -R 1001:0 /app/web /tmp/nginx /var/log/nginx /var/lib/nginx \
+    && chmod -R g=u /app/web /tmp/nginx /var/log/nginx /var/lib/nginx
+
+# Copy the web application
+COPY web/index.html /app/web/index.html
+COPY web/vlm.html /app/web/vlm.html
+COPY web/video-search.html /app/web/video-search.html
+COPY web/game.html /app/web/game.html
+COPY web/retail-analytics.html /app/web/retail-analytics.html
+# Copy assets maintaining directory structure
+COPY assets/ /app/assets/
+
+# Create custom nginx.conf for non-root execution
+RUN cat > /etc/nginx/nginx.conf << 'EOF'
+# Run as nginx user (UID 1001) for OpenShift compatibility
+pid /tmp/nginx/nginx.pid;
+error_log /var/log/nginx/error.log warn;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
+    # Use /tmp for client body temp files
+    client_body_temp_path /tmp/nginx/client_temp;
+    proxy_temp_path /tmp/nginx/proxy_temp;
+    fastcgi_temp_path /tmp/nginx/fastcgi_temp;
+    uwsgi_temp_path /tmp/nginx/uwsgi_temp;
+    scgi_temp_path /tmp/nginx/scgi_temp;
+    
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+    
+    access_log /var/log/nginx/access.log main;
+    
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    
+    include /etc/nginx/conf.d/*.conf;
+}
+EOF
+
+# Create server configuration
+RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
+server {
+    listen 8000;
+    server_name _;
+
+    root /app/web;
+    index index.html;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Serve assets from /app/assets
+    location /assets/ {
+        alias /app/assets/;
+        add_header Cache-Control "public, max-age=3600";
+    }
+
+    # Serve static files
+    location / {
+        try_files $uri $uri/ =404;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+    }
+
+    # Proxy API requests to model service (vLLM)
+    location /v1/ {
+        # Use OpenShift service name for internal communication
+        #proxy_pass http://rhaiis-service.rhaiis.svc.cluster.local:8000;
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # CORS headers
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization" always;
+        
+        # Handle preflight requests
+        if ($request_method = 'OPTIONS') {
+            add_header Access-Control-Allow-Origin * always;
+            add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+            add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization" always;
+            add_header Access-Control-Max-Age 1728000 always;
+            add_header Content-Type 'text/plain; charset=utf-8' always;
+            add_header Content-Length 0 always;
+            return 204;
+        }
+    }
+
+    # Proxy guardrail requests to Llama Guard service
+    location /guardrail/ {
+        # Strip /guardrail prefix and proxy to the guardrail service
+        rewrite ^/guardrail/(.*) /$1 break;
+        #proxy_pass http://llama-guard-service.llama-guard.svc.cluster.local:8000;
+        proxy_pass http://localhost:8000;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # CORS headers
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization" always;
+        
+        # Handle preflight requests
+        if ($request_method = 'OPTIONS') {
+            add_header Access-Control-Allow-Origin * always;
+            add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+            add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization" always;
+            add_header Access-Control-Max-Age 1728000 always;
+            add_header Content-Type 'text/plain; charset=utf-8' always;
+            add_header Content-Length 0 always;
+            return 204;
+        }
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+# Expose the web port
+EXPOSE 8000
+
+# Switch to non-root user for OpenShift compatibility (UBI nginx uses UID 1001)
+USER 1001
+
+# Health check - check our own health endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

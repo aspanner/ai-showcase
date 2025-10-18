@@ -1,0 +1,11 @@
+# Ignore unnecessary files during container build
+.git
+.gitignore
+*.md
+!BUILD_AND_DEPLOY.md
+LICENSE
+demo.png
+.DS_Store
+.vscode
+.cursor
+*.log

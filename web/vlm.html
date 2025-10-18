@@ -1,0 +1,4284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision Language Model Demo - RHAIIS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /* Light theme colors */
+            --primary-color: #dc2626;
+            --primary-hover: #b91c1c;
+            --secondary-color: #f3f4f6;
+            --success-color: #10b981;
+            --success-hover: #059669;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --warning-color: #f59e0b;
+            --guardrail-color: #8b5cf6;
+            --guardrail-hover: #7c3aed;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --border-color: #e5e7eb;
+            --border-focus: #dc2626;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #f87171;
+            --primary-hover: #dc2626;
+            --secondary-color: #374151;
+            --success-color: #34d399;
+            --success-hover: #10b981;
+            --danger-color: #f87171;
+            --danger-hover: #ef4444;
+            --warning-color: #fbbf24;
+            --guardrail-color: #a78bfa;
+            --guardrail-hover: #8b5cf6;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
+            --bg-primary: #1f2937;
+            --bg-secondary: #111827;
+            --bg-tertiary: #374151;
+            --border-color: #4b5563;
+            --border-focus: #f87171;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1550px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            gap: 2rem;
+            grid-template-areas: 
+                "header header header"
+                "video controls guardrail"
+                "inputs inputs inputs";
+            grid-template-columns: 1.2fr 400px 350px;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-areas: 
+                    "header header"
+                    "video controls"
+                    "guardrail guardrail"
+                    "inputs inputs";
+                grid-template-columns: 1fr 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-areas: 
+                    "header"
+                    "video"
+                    "controls"
+                    "guardrail"
+                    "inputs";
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+
+        }
+
+        .header {
+            grid-area: header;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-primary);
+            padding: 1.5rem 2rem;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .powered-by-vllm {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-xl);
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .powered-by-vllm:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: var(--shadow-xl);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .vllm-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            background: white;
+            padding: 0.25rem;
+            border-radius: var(--radius-sm);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            transition: all 0.3s ease;
+        }
+
+        .powered-by-vllm:hover .vllm-logo {
+            transform: rotate(5deg) scale(1.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .enterprise-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 1rem;
+        }
+
+        .guardrail-badge {
+            background: linear-gradient(135deg, var(--guardrail-color), var(--guardrail-hover));
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .video-section {
+            grid-area: video;
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        #videoFeed {
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: var(--radius-lg);
+            background: #000;
+            object-fit: cover;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        #videoFeed:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-xl);
+        }
+
+        #uploadedImage {
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: var(--radius-lg);
+            background: #000;
+            object-fit: contain;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        #uploadedImage:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            text-align: center;
+            background: var(--bg-secondary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background: var(--bg-tertiary);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .upload-text strong {
+            color: var(--primary-color);
+        }
+
+        #imageFileInput {
+            display: none;
+        }
+
+        .analyze-upload-btn {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .controls-section {
+            grid-area: controls;
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .guardrail-section {
+            grid-area: guardrail;
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .guardrail-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        select, input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            appearance: none;
+        }
+
+        select:focus, input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgb(220 38 38 / 0.1);
+            background: var(--bg-primary);
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--success-color), var(--success-hover));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--success-hover), var(--success-color));
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), var(--danger-hover));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, var(--danger-hover), var(--danger-color));
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-guardrail {
+            background: linear-gradient(135deg, var(--guardrail-color), var(--guardrail-hover));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-guardrail:hover {
+            background: linear-gradient(135deg, var(--guardrail-hover), var(--guardrail-color));
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .preset-btn {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .preset-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .inputs-section {
+            grid-area: inputs;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .inputs-section > .input-card:nth-child(1) {
+            grid-column: 1;
+            min-width: 0;
+        }
+
+        .inputs-section > .input-card:nth-child(2) {
+            grid-column: 2;
+            min-width: 0;
+        }
+
+        @media (max-width: 900px) {
+            .inputs-section {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .inputs-section > .input-card:nth-child(1),
+            .inputs-section > .input-card:nth-child(2) {
+                grid-column: auto;
+            }
+        }
+
+        /* Modal for adding templates */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-xl);
+            border: 2px solid var(--border-color);
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: flex-end;
+        }
+
+        .btn-add-template {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-add-template:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-save-template {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-save-template:hover {
+            background: linear-gradient(135deg, #059669, #047857) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .btn-delete-template {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-delete-template:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .input-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgb(220 38 38 / 0.1);
+            background: var(--bg-primary);
+        }
+
+        textarea[readonly] {
+            background: var(--bg-tertiary);
+            cursor: default;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        .status-ready {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-processing {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-guardrail {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--guardrail-color);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .status-flagged {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: currentColor;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Thumbnail Gallery */
+        .thumbnail-gallery-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .thumbnail-gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .thumbnail-gallery-header h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+
+        .thumbnail-count {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-left: 0.5rem;
+        }
+
+        .btn-clear-thumbnails {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-clear-thumbnails:hover {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+        }
+
+        .thumbnail-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            max-height: 220px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        .thumbnail-placeholder {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .thumbnail-placeholder i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        .thumbnail-placeholder p {
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .thumbnail-item {
+            position: relative;
+            flex-shrink: 0;
+            width: 90px;
+            height: 68px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--bg-secondary);
+        }
+
+        .thumbnail-item:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        }
+
+        .thumbnail-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail-item .thumbnail-timestamp {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.65rem;
+            padding: 0.25rem 0.4rem;
+            text-align: center;
+        }
+
+        .thumbnail-item .thumbnail-status {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+        }
+
+        .thumbnail-item .thumbnail-status.flagged {
+            background: var(--danger-color);
+            animation: pulse 2s infinite;
+        }
+
+        .enterprise-info {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(239, 68, 68, 0.05));
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .enterprise-info strong {
+            color: var(--primary-color);
+        }
+
+        .guardrail-info {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .guardrail-info strong {
+            color: var(--guardrail-color);
+        }
+
+        .guardrail-result {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            min-height: 80px;
+            transition: all 0.3s ease;
+        }
+
+        .guardrail-result.flagged {
+            border-color: var(--danger-color);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .guardrail-result.clean {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .highlighted-content {
+            background: rgba(239, 68, 68, 0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            font-weight: 600;
+        }
+
+        .warning-banner {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+            border: 2px solid var(--danger-color);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .warning-banner-icon {
+            font-size: 2rem;
+            color: var(--danger-color);
+            animation: pulse 2s infinite;
+        }
+
+        .warning-banner-content h4 {
+            color: var(--danger-color);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+
+        .warning-banner-content p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .response-display {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .response-display.flagged {
+            border-color: var(--danger-color);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--guardrail-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Violation History Section */
+        .history-section {
+            background: var(--bg-primary);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: var(--radius-xl);
+            margin-top: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            grid-column: 1 / -1;  /* Span all columns in the inputs grid */
+        }
+
+        .history-section:hover {
+            box-shadow: 0 -8px 30px rgba(220, 38, 38, 0.15);
+            border-top-color: var(--primary-hover);
+        }
+
+        .history-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                var(--primary-color) 0%, 
+                var(--success-color) 50%, 
+                var(--primary-color) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .history-section:hover::before {
+            opacity: 1;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .history-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--guardrail-color), var(--success-color));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: gradient-shift 3s ease infinite;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .history-header h3 i {
+            -webkit-text-fill-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-clear-history {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-clear-history:hover {
+            background: var(--danger-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .history-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.2);
+        }
+
+        .stat-card.flagged {
+            border-color: var(--danger-color);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% {
+                border-color: var(--danger-color);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            50% {
+                border-color: var(--danger-hover);
+                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+            }
+        }
+
+        .stat-card.flagged:hover {
+            animation: none;
+            border-color: var(--danger-hover);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .stat-card > i {
+            font-size: 2rem;
+            color: var(--success-color);
+        }
+
+        .stat-card.flagged > i {
+            color: var(--danger-color);
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        .metrics-grid-compact {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .metric-card-compact {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.75rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card-compact:hover {
+            border-color: var(--success-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .violation-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            table-layout: fixed;
+        }
+        
+        .violation-table col:nth-child(1) { width: 140px; }
+        .violation-table col:nth-child(2) { width: 120px; }
+        .violation-table col:nth-child(3) { width: 180px; }
+        .violation-table col:nth-child(4) { width: 100px; }
+        .violation-table col:nth-child(5) { width: auto; }
+
+        .violation-table thead {
+            background: var(--bg-secondary);
+        }
+
+        .violation-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .violation-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .violation-table tbody tr:hover:not(.empty-state) {
+            background: var(--bg-secondary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .violation-table tbody tr.flagged-row {
+            background: rgba(239, 68, 68, 0.05);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .violation-table tbody tr.flagged-row:hover {
+            background: rgba(239, 68, 68, 0.12);
+            box-shadow: 0 2px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .violation-table tbody tr.error-row {
+            background: rgba(251, 146, 60, 0.05);
+            border-left: 4px solid #f97316;
+        }
+
+        .violation-table tbody tr.error-row:hover {
+            background: rgba(251, 146, 60, 0.12);
+            box-shadow: 0 2px 12px rgba(251, 146, 60, 0.2);
+        }
+
+        .violation-table td {
+            padding: 1rem;
+            color: var(--text-primary);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            vertical-align: top;
+        }
+        
+        .violation-table tbody tr.flagged-row td:first-child,
+        .violation-table tbody tr.error-row td:first-child {
+            padding-left: calc(1rem - 4px);
+        }
+
+        .violation-table .empty-state td {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-badge.safe {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-badge.flagged {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-badge.error {
+            background: rgba(251, 146, 60, 0.1);
+            color: #f97316;
+            border: 1px solid rgba(251, 146, 60, 0.2);
+        }
+
+        .content-preview {
+            max-width: 100%;
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 1.5;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .confidence-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .confidence-value {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .confidence-progress {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: var(--success-color);
+            transition: width 0.3s ease;
+        }
+
+        .confidence-fill.low {
+            background: var(--danger-color);
+        }
+
+        .confidence-fill.medium {
+            background: var(--warning-color);
+        }
+
+        /* Mobile responsiveness for history section */
+        @media (max-width: 768px) {
+            .history-section {
+                padding: 1.5rem 1rem;
+            }
+
+            .history-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .history-header h3 {
+                font-size: 1.25rem;
+            }
+
+            .btn-clear-history {
+                width: 100%;
+            }
+
+            .history-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid-compact {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .violation-table {
+                font-size: 0.75rem;
+            }
+
+            .violation-table th,
+            .violation-table td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .content-preview {
+                max-width: 100%;
+                max-height: 100px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                <i class="fas fa-video"></i>
+                Vision Language Model Demo
+                <span class="enterprise-badge">RHAIIS</span>
+                <span class="guardrail-badge">Guardrails</span>
+            </h1>
+            <div class="powered-by-vllm">
+                <img src="../assets/redhat.png" alt="Red Hat Logo" class="vllm-logo">
+                <span>Red Hat One 26 demo - Team NASA</span>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" id="aboutToggle" title="About this project">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+                <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="video-section">
+            <div class="mode-selector">
+                <button class="mode-btn active" id="webcamModeBtn" onclick="switchToWebcamMode()">
+                    <i class="fas fa-video"></i> Webcam Feed
+                </button>
+                <button class="mode-btn" id="uploadModeBtn" onclick="switchToUploadMode()">
+                    <i class="fas fa-upload"></i> Upload Image
+                </button>
+            </div>
+            
+            <div id="webcamView">
+                <video id="videoFeed" autoplay playsinline></video>
+                <canvas id="canvas" class="hidden"></canvas>
+            </div>
+            
+            <div id="uploadView" class="hidden">
+                <div id="uploadArea" class="upload-area" onclick="document.getElementById('imageFileInput').click()">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        <strong>Click to upload</strong> or drag and drop<br>
+                        Supported formats: JPG, PNG, GIF, WebP
+                    </div>
+                </div>
+                <input type="file" id="imageFileInput" accept="image/*" onchange="handleImageUpload(event)">
+                <img id="uploadedImage" class="hidden" alt="Uploaded image">
+                <div id="uploadActions" class="hidden" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button id="analyzeUploadBtn" class="btn btn-guardrail" style="flex: 2;" onclick="analyzeUploadedImage()">
+                        <i class="fas fa-search"></i>
+                        <span>Analyze Image</span>
+                    </button>
+                    <button id="clearUploadBtn" class="btn btn-danger" style="flex: 1;" onclick="resetUploadView()">
+                        <i class="fas fa-times"></i>
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="statusIndicator" class="status-indicator status-ready">
+                <i class="fas fa-circle"></i>
+                <span>Ready to start</span>
+            </div>
+
+            <div class="thumbnail-gallery-section">
+                <div class="thumbnail-gallery-header">
+                    <h4>
+                        <i class="fas fa-images"></i>
+                        Processing History
+                        <span class="thumbnail-count" id="thumbnailCount">0 images</span>
+                    </h4>
+                    <button class="btn-clear-thumbnails" onclick="clearThumbnails()">
+                        <i class="fas fa-trash-alt"></i>
+                        Clear
+                    </button>
+                </div>
+                <div class="thumbnail-gallery" id="thumbnailGallery">
+                    <div class="thumbnail-placeholder">
+                        <i class="fas fa-camera"></i>
+                        <p>Start processing to see image thumbnails here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="control-group">
+                <label for="vllmEndpointSelect">
+                    <i class="fas fa-server"></i>
+                    RHAIIS vLLM Endpoint
+                </label>
+                <select id="vllmEndpointSelect" onchange="handleVllmEndpointChange()">
+                    <option value="https://rhaiis-route-rhaiis.apps.sno.sandbox73.opentlc.com">External Route (Default)</option>
+                    <option value="custom">Custom Endpoint...</option>
+                </select>
+                <div id="customVllmEndpointWrapper" style="display: none; margin-top: 0.5rem;">
+                    <div class="input-wrapper">
+                        <input type="text" id="baseURL" placeholder="Enter custom endpoint URL (e.g., https://api.openai.com)">
+                    </div>
+                    <div class="input-wrapper" style="margin-top: 0.5rem;">
+                        <input type="password" id="apiKey" placeholder="API Key (optional - required for some endpoints)">
+                    </div>
+                    <div class="input-wrapper" style="margin-top: 0.5rem;">
+                        <button id="fetchModelsBtn" class="btn btn-secondary" onclick="fetchAvailableModels()" style="width: 100%; margin-bottom: 0.5rem;">
+                            <i class="fas fa-download"></i>
+                            <span>Fetch Available Models</span>
+                        </button>
+                    </div>
+                    <div class="input-wrapper" style="margin-top: 0.5rem;">
+                        <select id="modelSelect" disabled>
+                            <option value="">Select a model (fetch models first)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="enterprise-info">
+                    <strong>🏢 Enterprise Setup:</strong> Using Red Hat AI Inference Server (RHAIIS) with vLLM backend.<br>
+                    <strong>Default:</strong> Uses external route (rhaiis-route-rhaiis.apps.sno.sandbox73.opentlc.com)<br>
+                    <strong>Model:</strong> Qwen2-VL-2B-Instruct (Vision Language Model)<br>
+                    <strong>API:</strong> OpenAI-compatible (Port 8000)
+                </div>
+            </div>
+
+            <div class="control-group">
+                <button id="testConnectionBtn" class="btn btn-primary" onclick="testConnection()" style="width: 100%; margin-bottom: 1rem;">
+                    <i class="fas fa-wifi"></i>
+                    <span>Test VLM</span>
+                </button>
+            </div>
+
+            <div class="control-group">
+                <label for="intervalSelect">
+                    <i class="fas fa-clock"></i>
+                    Request Interval
+                </label>
+                <select id="intervalSelect">
+                    <option value="1000" selected>1 second</option>
+                    <option value="5000">5 seconds</option>
+                    <option value="10000">10 seconds</option>
+                    <option value="30000">30 seconds</option>
+                </select>
+            </div>
+
+            <button id="startButton" class="btn btn-primary">
+                <i class="fas fa-play"></i>
+                <span>Start Processing</span>
+            </button>
+
+            <div class="control-group" style="margin-top: 1.5rem;">
+                <label>
+                    <i class="fas fa-tachometer-alt"></i>
+                    vLLM Performance Metrics
+                </label>
+                <div class="metrics-grid-compact">
+                    <div class="metric-card-compact">
+                        <div class="metric-content">
+                            <div class="metric-label">Tokens/s</div>
+                            <div class="metric-value" id="tokensPerSecond">--</div>
+                        </div>
+                    </div>
+                    <div class="metric-card-compact">
+                        <div class="metric-content">
+                            <div class="metric-label">Latency</div>
+                            <div class="metric-value" id="latencyMs">--</div>
+                        </div>
+                    </div>
+                    <div class="metric-card-compact">
+                        <div class="metric-content">
+                            <div class="metric-label">Prompt</div>
+                            <div class="metric-value" id="promptTokens">--</div>
+                        </div>
+                    </div>
+                    <div class="metric-card-compact">
+                        <div class="metric-content">
+                            <div class="metric-label">Completion</div>
+                            <div class="metric-value" id="completionTokens">--</div>
+                        </div>
+                    </div>
+                    <div class="metric-card-compact">
+                        <div class="metric-content">
+                            <div class="metric-label">Total</div>
+                            <div class="metric-value" id="totalTokens">--</div>
+                        </div>
+                    </div>
+                    <div class="metric-card-compact">
+                        <div class="metric-content">
+                            <div class="metric-label">Throughput</div>
+                            <div class="metric-value" id="throughput">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guardrail-section">
+            <h3>
+                <i class="fas fa-shield-alt"></i>
+                Content Guardrails
+            </h3>
+
+            <div class="control-group">
+                <label style="display: flex; align-items: center; justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-toggle-on"></i>
+                        Enable Guardrails
+                    </span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="guardrailEnabled" checked>
+                        <span class="slider"></span>
+                    </label>
+                </label>
+            </div>
+
+            <div class="control-group">
+                <label for="guardrailEndpointSelect">
+                    <i class="fas fa-server"></i>
+                    Guardrail Endpoint
+                </label>
+                <select id="guardrailEndpointSelect" onchange="handleGuardrailEndpointChange()">
+                    <option value="https://llama-guard-route-llama-guard.apps.sno.sandbox73.opentlc.com">External Route (Default)</option>
+                    <option value="custom">Custom Endpoint...</option>
+                </select>
+                <div id="customGuardrailEndpointWrapper" style="display: none; margin-top: 0.5rem;">
+                    <div class="input-wrapper">
+                        <input type="text" id="guardrailURL" placeholder="Enter custom endpoint URL (e.g., https://api.openai.com)">
+                    </div>
+                    <div class="input-wrapper" style="margin-top: 0.5rem;">
+                        <input type="password" id="guardrailApiKey" placeholder="API Key (optional - required for some endpoints)">
+                    </div>
+                    <div class="input-wrapper" style="margin-top: 0.5rem;">
+                        <button id="fetchGuardrailModelsBtn" class="btn btn-secondary" onclick="fetchAvailableGuardrailModels()" style="width: 100%; margin-bottom: 0.5rem;">
+                            <i class="fas fa-download"></i>
+                            <span>Fetch Available Models</span>
+                        </button>
+                    </div>
+                    <div class="input-wrapper" style="margin-top: 0.5rem;">
+                        <select id="guardrailModelSelect" disabled>
+                            <option value="">Select a model (fetch models first)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <button id="testGuardrailBtn" class="btn btn-guardrail" onclick="testGuardrailConnection()" style="width: 100%; margin-bottom: 1rem;">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Test Guardrail</span>
+                </button>
+            </div>
+
+            <div id="guardrailStatus" class="status-indicator status-guardrail">
+                <i class="fas fa-shield-alt"></i>
+                <span>Guardrail Ready</span>
+            </div>
+
+            <div class="guardrail-info">
+                <strong>🛡️ Guardrail Model:</strong> Llama-Guard-3-1B (Content safety detection)<br>
+                <strong>Default:</strong> Uses external route (llama-guard-route-llama-guard.apps.sno.sandbox73.opentlc.com)<br>
+                <strong>Detection:</strong> Inappropriate, harmful, or offensive content<br>
+                <strong>Action:</strong> Highlights flagged content in responses
+            </div>
+
+            <div class="control-group">
+                <label>
+                    <i class="fas fa-eye"></i>
+                    Guardrail Result
+                </label>
+                <div id="guardrailResult" class="guardrail-result">
+                    Waiting for content to analyze...
+                </div>
+            </div>
+        </div>
+
+        <div class="inputs-section">
+            <div class="input-card">
+                <h3>
+                    <i class="fas fa-comment-dots"></i>
+                    Instruction
+                </h3>
+                <div class="control-group">
+                    <label for="instructionPreset">
+                        <i class="fas fa-list"></i>
+                        Quick Templates
+                    </label>
+                    <select id="instructionPreset" onchange="applyInstructionTemplate()">
+                        <option value="">-- Select a template --</option>
+                        <option value="general">General Monitoring</option>
+                        <option value="security">Security Monitoring</option>
+                        <option value="people">People Counting</option>
+                        <option value="activity">Activity Detection</option>
+                        <option value="objects">Object Detection</option>
+                        <option value="anomaly">Anomaly Detection</option>
+                        <option value="safety">Safety Compliance</option>
+                        <option value="traffic">Traffic Monitoring</option>
+                        <option value="quality">Quality Inspection</option>
+                        <option value="behavior">Behavior Analysis</option>
+                        <option value="gestures">Gesture Detection</option>
+                    </select>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <button type="button" class="btn-add-template" onclick="openAddTemplateModal()" style="flex: 1;">
+                            <i class="fas fa-plus"></i>
+                            Add Template
+                        </button>
+                        <button type="button" class="btn-add-template btn-save-template" onclick="saveCurrentTemplate()" style="flex: 1;">
+                            <i class="fas fa-save"></i>
+                            Save Template
+                        </button>
+                        <button type="button" class="btn-add-template btn-delete-template" onclick="deleteCurrentTemplate()" style="flex: 1;">
+                            <i class="fas fa-trash-alt"></i>
+                            Delete Template
+                        </button>
+                    </div>
+                </div>
+                <textarea id="instructionText" placeholder="What would you like me to analyze in the video?"></textarea>
+            </div>
+
+            <div class="input-card">
+                <h3>
+                    <i class="fas fa-robot"></i>
+                    VLM Response
+                </h3>
+                <div id="warningBanner" class="warning-banner hidden">
+                    <div class="warning-banner-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="warning-banner-content">
+                        <h4>⚠️ Content Warning Detected</h4>
+                        <p id="warningMessage">Potentially inappropriate content has been flagged by the guardrail system.</p>
+                    </div>
+                </div>
+                <textarea id="responseText" class="response-display" placeholder="VLM responses will appear here...">VLM responses will appear here...</textarea>
+            </div>
+
+            <div class="history-section">
+            <div class="history-header">
+                <h3>
+                    <i class="fas fa-history"></i>
+                    Violation History
+                </h3>
+                <button id="clearHistoryBtn" class="btn-clear-history" onclick="clearViolationHistory()">
+                    <i class="fas fa-trash-alt"></i>
+                    Clear History
+                </button>
+            </div>
+            <div class="history-stats">
+                <div class="stat-card">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="stat-content">
+                        <div class="stat-value" id="safeCount">0</div>
+                        <div class="stat-label">Safe</div>
+                    </div>
+                </div>
+                <div class="stat-card flagged">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="stat-content">
+                        <div class="stat-value" id="flaggedCount">0</div>
+                        <div class="stat-label">Flagged</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalChecks">0</div>
+                        <div class="stat-label">Total Checks</div>
+                    </div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="violation-table">
+                    <colgroup>
+                        <col style="width: 140px;">
+                        <col style="width: 120px;">
+                        <col style="width: 180px;">
+                        <col style="width: 100px;">
+                        <col>
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Issues Detected</th>
+                            <th>Confidence</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="violationTableBody">
+                        <tr class="empty-state">
+                            <td colspan="5">
+                                <i class="fas fa-info-circle"></i>
+                                No violations detected yet. Start processing to see history.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding custom templates -->
+    <div class="modal-overlay" id="addTemplateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-plus-circle"></i>
+                    Add Custom Template
+                </h3>
+                <button class="modal-close" onclick="closeAddTemplateModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="control-group">
+                    <label for="customTemplateName">
+                        <i class="fas fa-tag"></i>
+                        Template Name
+                    </label>
+                    <input type="text" id="customTemplateName" placeholder="e.g., My Custom Monitoring">
+                </div>
+                <div class="control-group">
+                    <label for="customTemplatePrompt">
+                        <i class="fas fa-comment-dots"></i>
+                        Template Prompt
+                    </label>
+                    <textarea id="customTemplatePrompt" placeholder="Enter the instruction prompt for this template..." style="min-height: 150px;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddTemplateModal()">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button class="btn btn-primary" onclick="saveCustomTemplate()">
+                    <i class="fas fa-save"></i>
+                    Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for confirmation dialogs -->
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="confirmModalTitle">
+                    <i class="fas fa-question-circle"></i>
+                    Confirm Action
+                </h3>
+                <button class="modal-close" onclick="closeConfirmationModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmModalMessage" style="color: var(--text-primary); line-height: 1.6; margin: 0;">
+                    Are you sure you want to proceed?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeConfirmationModal()">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button class="btn btn-primary" id="confirmModalButton" onclick="confirmModalAction()">
+                    <i class="fas fa-check"></i>
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for About -->
+    <div class="modal-overlay" id="aboutModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    About This Project
+                </h3>
+                <button class="modal-close" onclick="closeAboutModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary-color); font-size: 1.25rem; margin-bottom: 0.5rem;">Red Hat One 26 Demo</h4>
+                    <p style="color: var(--text-secondary); margin: 0;">Vision Language Model with Guardrails</p>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-users"></i>
+                        Team Members
+                    </h4>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <img src="../assets/michael.png" alt="Michael Yang" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Michael Yang</div>
+                                <div style="color: var(--text-secondary); font-size: 0.875rem;">Account Solution Architect</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <img src="../assets/henrique.png" alt="Henrique Viecili" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Henrique Viecili</div>
+                                <div style="color: var(--text-secondary); font-size: 0.875rem;">Account Solution Architect</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
+                        <i class="fas fa-rocket"></i> Team NASA
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('videoFeed');
+        const canvas = document.getElementById('canvas');
+        const baseURL = document.getElementById('baseURL');
+        const guardrailURL = document.getElementById('guardrailURL');
+        const instructionText = document.getElementById('instructionText');
+        const responseText = document.getElementById('responseText');
+        const warningBanner = document.getElementById('warningBanner');
+        const warningMessage = document.getElementById('warningMessage');
+        const intervalSelect = document.getElementById('intervalSelect');
+        const startButton = document.getElementById('startButton');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const guardrailStatus = document.getElementById('guardrailStatus');
+        const guardrailResult = document.getElementById('guardrailResult');
+        const guardrailEnabled = document.getElementById('guardrailEnabled');
+        const themeToggle = document.getElementById('themeToggle');
+        const aboutToggle = document.getElementById('aboutToggle');
+        
+        // Image upload elements
+        const webcamModeBtn = document.getElementById('webcamModeBtn');
+        const uploadModeBtn = document.getElementById('uploadModeBtn');
+        const webcamView = document.getElementById('webcamView');
+        const uploadView = document.getElementById('uploadView');
+        const uploadArea = document.getElementById('uploadArea');
+        const imageFileInput = document.getElementById('imageFileInput');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const uploadActions = document.getElementById('uploadActions');
+        const analyzeUploadBtn = document.getElementById('analyzeUploadBtn');
+        
+        let currentMode = 'webcam'; // 'webcam' or 'upload'
+        let uploadedImageData = null;
+
+        // Set default values
+        instructionText.value = "Describe what you see in this image. What is happening right now?";
+        
+        // Smart API endpoint detection for RHAIIS/vLLM
+        function getDefaultAPIEndpoint() {
+            // Use external route endpoint
+            return "https://rhaiis-route-rhaiis.apps.sno.sandbox73.opentlc.com";
+        }
+
+        function getDefaultGuardrailEndpoint() {
+            // Use external route endpoint
+            return "https://llama-guard-route-llama-guard.apps.sno.sandbox73.opentlc.com";
+        }
+        
+        // Initialize endpoints with default external routes
+        baseURL.value = getDefaultAPIEndpoint();
+        guardrailURL.value = getDefaultGuardrailEndpoint();
+
+        let stream;
+        let intervalId;
+        let isProcessing = false;
+
+        // Violation history tracking
+        let violationHistory = [];
+        let safeCount = 0;
+        let flaggedCount = 0;
+
+        // Thumbnail gallery tracking
+        let thumbnailHistory = [];
+        const MAX_THUMBNAILS = 60; // Limit to prevent memory issues (5 per row × 3 rows = 15 visible, 60 total history)
+
+        // Format timestamp
+        function formatTimestamp(date) {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Add violation record to history
+        function addViolationRecord(isSafe, issues, confidence, contentPreview) {
+            const timestamp = new Date();
+            const record = {
+                timestamp,
+                isSafe,
+                issues,
+                confidence,
+                contentPreview: contentPreview.substring(0, 500)
+            };
+
+            violationHistory.unshift(record); // Add to beginning
+            if (violationHistory.length > 100) {
+                violationHistory.pop(); // Keep only last 100
+            }
+
+            // Update statistics
+            if (isSafe) {
+                safeCount++;
+            } else {
+                flaggedCount++;
+            }
+            updateStatistics();
+            updateViolationTable();
+        }
+
+        // Update statistics display
+        function updateStatistics() {
+            document.getElementById('safeCount').textContent = safeCount;
+            document.getElementById('flaggedCount').textContent = flaggedCount;
+            document.getElementById('totalChecks').textContent = safeCount + flaggedCount;
+        }
+
+        // Update violation table
+        function updateViolationTable() {
+            const tbody = document.getElementById('violationTableBody');
+            
+            if (violationHistory.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="empty-state">
+                        <td colspan="5">
+                            <i class="fas fa-info-circle"></i>
+                            No violations detected yet. Start processing to see history.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = violationHistory.map(record => {
+                // Check if this is a guardrail error
+                const isError = record.confidence === 0.0 && record.issues.some(i => i.includes('Guardrail Error'));
+                
+                let statusBadge;
+                if (isError) {
+                    statusBadge = '<span class="status-badge error"><i class="fas fa-exclamation-circle"></i> Error</span>';
+                } else if (record.isSafe) {
+                    statusBadge = '<span class="status-badge safe"><i class="fas fa-check-circle"></i> Safe</span>';
+                } else {
+                    statusBadge = '<span class="status-badge flagged"><i class="fas fa-exclamation-triangle"></i> Flagged</span>';
+                }
+                
+                const issuesText = record.isSafe ? 'None' : record.issues.join(', ');
+                
+                const confidencePercent = (record.confidence * 100).toFixed(1);
+                const confidenceClass = record.confidence >= 0.8 ? '' : (record.confidence >= 0.5 ? 'medium' : 'low');
+                const confidenceBar = isError ? '<span class="confidence-value">N/A</span>' : `
+                    <div class="confidence-bar">
+                        <span class="confidence-value">${confidencePercent}%</span>
+                        <div class="confidence-progress">
+                            <div class="confidence-fill ${confidenceClass}" style="width: ${confidencePercent}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                const rowClass = isError ? 'error-row' : (record.isSafe ? '' : 'flagged-row');
+                
+                return `
+                    <tr class="${rowClass}">
+                        <td>${formatTimestamp(record.timestamp)}</td>
+                        <td>${statusBadge}</td>
+                        <td>${issuesText}</td>
+                        <td>${confidenceBar}</td>
+                        <td><div class="content-preview" title="${escapeHtml(record.contentPreview)}">${escapeHtml(record.contentPreview)}</div></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Clear violation history
+        function clearViolationHistory() {
+            if (violationHistory.length === 0) return;
+            
+            if (confirm('Are you sure you want to clear the violation history?')) {
+                violationHistory = [];
+                safeCount = 0;
+                flaggedCount = 0;
+                updateStatistics();
+                updateViolationTable();
+            }
+        }
+
+        // Preset endpoint functions
+        function setPresetEndpoint(url) {
+            baseURL.value = url;
+            baseURL.focus();
+            
+            // Update status message based on whether endpoint is set
+            if (stream) {
+                if (url.trim()) {
+                    updateStatus('ready', 'Camera ready - Using custom endpoint', 'check-circle');
+                    setResponseText(`Camera access granted. Using custom vLLM endpoint: ${url}\nReady to start processing with VLM.`);
+                } else {
+                    updateStatus('ready', 'Camera ready - Using internal service', 'check-circle');
+                    setResponseText("Camera access granted. Using internal service rhaiis-service.\nReady to start processing with VLM.");
+                }
+            }
+        }
+
+        function setGuardrailEndpoint(url) {
+            guardrailURL.value = url;
+            guardrailURL.focus();
+        }
+
+        // Handle vLLM endpoint dropdown change
+        function handleVllmEndpointChange() {
+            const select = document.getElementById('vllmEndpointSelect');
+            const customWrapper = document.getElementById('customVllmEndpointWrapper');
+            const baseURLInput = document.getElementById('baseURL');
+            
+            if (select.value === 'custom') {
+                customWrapper.style.display = 'block';
+                baseURLInput.focus();
+            } else {
+                customWrapper.style.display = 'none';
+                baseURLInput.value = select.value;
+                
+                // Update status message
+                if (stream) {
+                    updateStatus('ready', 'Camera ready - Using external route', 'check-circle');
+                    setResponseText(`Camera access granted. Using external route.\nReady to start processing with VLM.`);
+                }
+            }
+        }
+
+        // Handle guardrail endpoint dropdown change
+        function handleGuardrailEndpointChange() {
+            const select = document.getElementById('guardrailEndpointSelect');
+            const customWrapper = document.getElementById('customGuardrailEndpointWrapper');
+            const guardrailURLInput = document.getElementById('guardrailURL');
+            
+            if (select.value === 'custom') {
+                customWrapper.style.display = 'block';
+                guardrailURLInput.focus();
+            } else {
+                customWrapper.style.display = 'none';
+                guardrailURLInput.value = select.value;
+            }
+        }
+
+        // Fetch available models from the custom endpoint
+        async function fetchAvailableModels() {
+            const baseURLInput = document.getElementById('baseURL');
+            const modelSelect = document.getElementById('modelSelect');
+            const fetchBtn = document.getElementById('fetchModelsBtn');
+            
+            const endpoint = baseURLInput.value.trim();
+            
+            if (!endpoint) {
+                alert('Please enter a custom endpoint URL first');
+                baseURLInput.focus();
+                return;
+            }
+            
+            // Show loading state
+            fetchBtn.disabled = true;
+            fetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Fetching models...</span>';
+            modelSelect.disabled = true;
+            modelSelect.innerHTML = '<option value="">Loading models...</option>';
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
+                // Build the models API URL
+                const modelsUrl = `${endpoint}/v1/models`;
+                
+                // Use the same headers as API requests (includes API key if provided)
+                const headers = getApiHeaders();
+                
+                console.log('Fetching models from:', modelsUrl);
+                
+                const response = await fetch(modelsUrl, {
+                    method: 'GET',
+                    headers: headers,
+                    mode: 'cors',
+                    signal: controller.signal,
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Models response:', data);
+                    
+                    // Extract model IDs from the response
+                    const models = data.data || data.models || [];
+                    
+                    if (models.length === 0) {
+                        modelSelect.innerHTML = '<option value="">No models found</option>';
+                        alert('No models found at this endpoint');
+                    } else {
+                        modelSelect.innerHTML = '<option value="">Select a model</option>';
+                        models.forEach(model => {
+                            const option = document.createElement('option');
+                            const modelId = model.id || model.name || model;
+                            option.value = modelId;
+                            option.textContent = modelId;
+                            modelSelect.appendChild(option);
+                        });
+                        modelSelect.disabled = false;
+                        
+                        // Show success message
+                        updateStatus('ready', `Found ${models.length} models`, 'check-circle');
+                        setResponseText(`✅ Successfully fetched ${models.length} models from endpoint.\n\nPlease select a model from the dropdown.`);
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error fetching models:', response.status, errorText);
+                    modelSelect.innerHTML = '<option value="">Error fetching models</option>';
+                    alert(`Failed to fetch models: ${response.status} ${response.statusText}\n\n${errorText}`);
+                }
+            } catch (error) {
+                console.error('Error fetching models:', error);
+                modelSelect.innerHTML = '<option value="">Error - fetch models again</option>';
+                
+                if (error.name === 'AbortError') {
+                    alert('Request timed out after 10 seconds. Please check your endpoint URL.');
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    alert('CORS or connection error. Make sure the endpoint allows cross-origin requests.\n\nError: ' + error.message);
+                } else {
+                    alert('Error fetching models: ' + error.message);
+                }
+            } finally {
+                // Restore button state
+                fetchBtn.disabled = false;
+                fetchBtn.innerHTML = '<i class="fas fa-download"></i><span>Fetch Available Models</span>';
+            }
+        }
+
+        // Get the selected model name
+        function getSelectedModel() {
+            const select = document.getElementById('vllmEndpointSelect');
+            const modelSelect = document.getElementById('modelSelect');
+            
+            // If using custom endpoint and a model is selected, use it
+            if (select.value === 'custom' && modelSelect.value) {
+                return modelSelect.value;
+            }
+            
+            // Otherwise use the default model
+            return "Qwen/Qwen2-VL-2B-Instruct";
+        }
+
+        // Get API headers
+        function getApiHeaders() {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            };
+            
+            // Add API key if provided (for custom endpoints)
+            const apiKeyInput = document.getElementById('apiKey');
+            if (apiKeyInput && apiKeyInput.value.trim()) {
+                headers['Authorization'] = `Bearer ${apiKeyInput.value.trim()}`;
+            }
+            
+            return headers;
+        }
+
+        // Fetch available models for guardrail endpoint
+        async function fetchAvailableGuardrailModels() {
+            const guardrailURLInput = document.getElementById('guardrailURL');
+            const modelSelect = document.getElementById('guardrailModelSelect');
+            const fetchBtn = document.getElementById('fetchGuardrailModelsBtn');
+            
+            const endpoint = guardrailURLInput.value.trim();
+            
+            if (!endpoint) {
+                alert('Please enter a custom endpoint URL first');
+                guardrailURLInput.focus();
+                return;
+            }
+            
+            // Show loading state
+            fetchBtn.disabled = true;
+            fetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Fetching models...</span>';
+            modelSelect.disabled = true;
+            modelSelect.innerHTML = '<option value="">Loading models...</option>';
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
+                // Build the models API URL
+                const modelsUrl = `${endpoint}/v1/models`;
+                
+                // Use the same headers as API requests (includes API key if provided)
+                const headers = getGuardrailApiHeaders();
+                
+                console.log('Fetching guardrail models from:', modelsUrl);
+                
+                const response = await fetch(modelsUrl, {
+                    method: 'GET',
+                    headers: headers,
+                    mode: 'cors',
+                    signal: controller.signal,
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Guardrail models response:', data);
+                    
+                    // Extract model IDs from the response
+                    const models = data.data || data.models || [];
+                    
+                    if (models.length === 0) {
+                        modelSelect.innerHTML = '<option value="">No models found</option>';
+                        alert('No models found at this endpoint');
+                    } else {
+                        modelSelect.innerHTML = '<option value="">Select a model</option>';
+                        models.forEach(model => {
+                            const option = document.createElement('option');
+                            const modelId = model.id || model.name || model;
+                            option.value = modelId;
+                            option.textContent = modelId;
+                            modelSelect.appendChild(option);
+                        });
+                        modelSelect.disabled = false;
+                        
+                        // Show success message
+                        const guardrailStatus = document.getElementById('guardrailStatus');
+                        if (guardrailStatus) {
+                            guardrailStatus.className = 'status-indicator status-guardrail';
+                            guardrailStatus.textContent = `✓ Found ${models.length} models - Select one from dropdown`;
+                        }
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error fetching guardrail models:', response.status, errorText);
+                    modelSelect.innerHTML = '<option value="">Error fetching models</option>';
+                    alert(`Failed to fetch models: ${response.status} ${response.statusText}\n\n${errorText}`);
+                }
+            } catch (error) {
+                console.error('Error fetching guardrail models:', error);
+                modelSelect.innerHTML = '<option value="">Error - fetch models again</option>';
+                
+                if (error.name === 'AbortError') {
+                    alert('Request timed out after 10 seconds. Please check your endpoint URL.');
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    alert('CORS or connection error. Make sure the endpoint allows cross-origin requests.\n\nError: ' + error.message);
+                } else {
+                    alert('Error fetching models: ' + error.message);
+                }
+            } finally {
+                // Restore button state
+                fetchBtn.disabled = false;
+                fetchBtn.innerHTML = '<i class="fas fa-download"></i><span>Fetch Available Models</span>';
+            }
+        }
+
+        // Get the selected guardrail model name
+        function getSelectedGuardrailModel() {
+            const select = document.getElementById('guardrailEndpointSelect');
+            const modelSelect = document.getElementById('guardrailModelSelect');
+            
+            // If using custom endpoint and a model is selected, use it
+            if (select.value === 'custom' && modelSelect.value) {
+                return modelSelect.value;
+            }
+            
+            // Otherwise use the default model
+            return "meta-llama/Llama-Guard-3-1B";
+        }
+
+        // Get guardrail API headers
+        function getGuardrailApiHeaders() {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            };
+            
+            // Add API key if provided (for custom endpoints)
+            const apiKeyInput = document.getElementById('guardrailApiKey');
+            if (apiKeyInput && apiKeyInput.value.trim()) {
+                headers['Authorization'] = `Bearer ${apiKeyInput.value.trim()}`;
+            }
+            
+            return headers;
+        }
+
+        // Instruction templates for live feed monitoring
+        const instructionTemplates = {
+            general: "Describe what you see in this image. What is happening right now?",
+            security: "Monitor this scene for security concerns. Report any suspicious activities, unauthorized access, or unusual behavior. Is everything secure?",
+            people: "Count the number of people visible in this image. Describe their locations and what they are doing.",
+            activity: "Detect and describe any activities or movements happening in this scene. Are people working, standing, sitting, or moving?",
+            objects: "Identify and list all significant objects visible in this image. Focus on equipment, vehicles, packages, or important items.",
+            anomaly: "Look for anything unusual, out of place, or abnormal in this scene. Compare to what would be expected in a normal situation.",
+            safety: "Check for safety compliance issues. Are people wearing required safety equipment (helmets, vests, masks)? Any safety hazards visible?",
+            traffic: "Monitor traffic conditions. Count vehicles, identify congestion, describe traffic flow, and note any incidents or obstructions.",
+            quality: "Inspect this scene for quality issues, defects, or problems. Is everything in proper condition and meeting standards?",
+            behavior: "Analyze the behavior and interactions of people in this scene. Are they following protocols? Any concerning behaviors?",
+            gestures: "Carefully analyze the hand gestures visible in this image. Describe what hand positions or gestures you can clearly see. ONLY if you can actually see someone making an obscene gesture (such as raising their middle finger extended alone, or showing other offensive hand signs), then state it explicitly using phrases like 'person is showing their middle finger' or 'person is making an obscene gesture'. If hands are in normal, neutral, or unclear positions, describe them as normal or neutral. Do not infer offensive gestures unless they are clearly visible."
+        };
+
+        // Load custom templates from localStorage
+        function loadCustomTemplates() {
+            try {
+                const stored = localStorage.getItem('customTemplates');
+                if (stored) {
+                    const customTemplates = JSON.parse(stored);
+                    // Add custom templates to the instructionTemplates object
+                    Object.assign(instructionTemplates, customTemplates);
+                    // Update the dropdown
+                    updateTemplateDropdown();
+                }
+            } catch (error) {
+                console.error('Error loading custom templates:', error);
+            }
+        }
+
+        // Update template dropdown with custom templates
+        function updateTemplateDropdown() {
+            const preset = document.getElementById('instructionPreset');
+            const currentValue = preset.value;
+            
+            // Get all custom template keys
+            const customKeys = [];
+            try {
+                const stored = localStorage.getItem('customTemplates');
+                if (stored) {
+                    const customTemplates = JSON.parse(stored);
+                    customKeys.push(...Object.keys(customTemplates));
+                }
+            } catch (error) {
+                console.error('Error reading custom templates:', error);
+            }
+            
+            // Remove existing custom options
+            const options = Array.from(preset.options);
+            options.forEach(option => {
+                if (option.dataset.custom === 'true') {
+                    option.remove();
+                }
+            });
+            
+            // Add custom templates to dropdown
+            customKeys.forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = key.split('_').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+                option.dataset.custom = 'true';
+                preset.appendChild(option);
+            });
+            
+            // Restore selection if it still exists
+            if (currentValue && instructionTemplates[currentValue]) {
+                preset.value = currentValue;
+            }
+        }
+
+        function applyInstructionTemplate() {
+            const preset = document.getElementById('instructionPreset');
+            const selectedTemplate = preset.value;
+            
+            if (selectedTemplate && instructionTemplates[selectedTemplate]) {
+                instructionText.value = instructionTemplates[selectedTemplate];
+                instructionText.focus();
+            }
+        }
+
+        // Modal functions
+        function openAddTemplateModal() {
+            const modal = document.getElementById('addTemplateModal');
+            modal.classList.add('active');
+            document.getElementById('customTemplateName').value = '';
+            document.getElementById('customTemplatePrompt').value = '';
+            document.getElementById('customTemplateName').focus();
+        }
+
+        function closeAddTemplateModal() {
+            const modal = document.getElementById('addTemplateModal');
+            modal.classList.remove('active');
+        }
+
+        // Confirmation modal functions
+        let confirmModalCallback = null;
+
+        function openConfirmationModal(title, message, buttonText, buttonClass, callback) {
+            const modal = document.getElementById('confirmationModal');
+            const titleElement = document.getElementById('confirmModalTitle');
+            const messageElement = document.getElementById('confirmModalMessage');
+            const buttonElement = document.getElementById('confirmModalButton');
+            
+            // Update modal content
+            titleElement.innerHTML = title;
+            messageElement.textContent = message;
+            buttonElement.innerHTML = buttonText;
+            
+            // Update button style
+            buttonElement.className = 'btn ' + buttonClass;
+            
+            // Store callback
+            confirmModalCallback = callback;
+            
+            // Show modal
+            modal.classList.add('active');
+        }
+
+        function closeConfirmationModal() {
+            const modal = document.getElementById('confirmationModal');
+            modal.classList.remove('active');
+            confirmModalCallback = null;
+        }
+
+        function confirmModalAction() {
+            if (confirmModalCallback) {
+                confirmModalCallback();
+            }
+            closeConfirmationModal();
+        }
+
+        // About modal functions
+        function openAboutModal() {
+            const modal = document.getElementById('aboutModal');
+            modal.classList.add('active');
+        }
+
+        function closeAboutModal() {
+            const modal = document.getElementById('aboutModal');
+            modal.classList.remove('active');
+        }
+
+        function saveCustomTemplate() {
+            const nameInput = document.getElementById('customTemplateName');
+            const promptInput = document.getElementById('customTemplatePrompt');
+            
+            const name = nameInput.value.trim();
+            const prompt = promptInput.value.trim();
+            
+            if (!name) {
+                alert('Please enter a template name');
+                nameInput.focus();
+                return;
+            }
+            
+            if (!prompt) {
+                alert('Please enter a template prompt');
+                promptInput.focus();
+                return;
+            }
+            
+            // Create a key from the name (lowercase, replace spaces with underscores)
+            const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+            
+            if (!key) {
+                alert('Please enter a valid template name');
+                nameInput.focus();
+                return;
+            }
+            
+            try {
+                // Load existing custom templates
+                let customTemplates = {};
+                const stored = localStorage.getItem('customTemplates');
+                if (stored) {
+                    customTemplates = JSON.parse(stored);
+                }
+                
+                // Add new template
+                customTemplates[key] = prompt;
+                
+                // Save to localStorage
+                localStorage.setItem('customTemplates', JSON.stringify(customTemplates));
+                
+                // Add to instructionTemplates object
+                instructionTemplates[key] = prompt;
+                
+                // Update dropdown
+                updateTemplateDropdown();
+                
+                // Close modal
+                closeAddTemplateModal();
+                
+                // Select the new template
+                document.getElementById('instructionPreset').value = key;
+                applyInstructionTemplate();
+                
+                console.log('✅ Custom template saved:', name);
+            } catch (error) {
+                console.error('Error saving custom template:', error);
+                alert('Error saving template. Please try again.');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            const addTemplateModal = document.getElementById('addTemplateModal');
+            const confirmationModal = document.getElementById('confirmationModal');
+            const aboutModal = document.getElementById('aboutModal');
+            
+            if (e.target === addTemplateModal) {
+                closeAddTemplateModal();
+            }
+            
+            if (e.target === confirmationModal) {
+                closeConfirmationModal();
+            }
+            
+            if (e.target === aboutModal) {
+                closeAboutModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const addTemplateModal = document.getElementById('addTemplateModal');
+                const confirmationModal = document.getElementById('confirmationModal');
+                const aboutModal = document.getElementById('aboutModal');
+                
+                if (addTemplateModal.classList.contains('active')) {
+                    closeAddTemplateModal();
+                } else if (confirmationModal.classList.contains('active')) {
+                    closeConfirmationModal();
+                } else if (aboutModal.classList.contains('active')) {
+                    closeAboutModal();
+                }
+            }
+        });
+
+        // Save changes to current template
+        function saveCurrentTemplate() {
+            const preset = document.getElementById('instructionPreset');
+            const selectedTemplate = preset.value;
+            const currentText = instructionText.value.trim();
+            
+            if (!selectedTemplate) {
+                openConfirmationModal(
+                    '<i class="fas fa-exclamation-circle"></i> No Template Selected',
+                    'Please select a template first.',
+                    '<i class="fas fa-check"></i> OK',
+                    'btn-primary',
+                    null
+                );
+                return;
+            }
+            
+            if (!currentText) {
+                openConfirmationModal(
+                    '<i class="fas fa-exclamation-circle"></i> Empty Content',
+                    'Template content cannot be empty.',
+                    '<i class="fas fa-check"></i> OK',
+                    'btn-primary',
+                    () => instructionText.focus()
+                );
+                return;
+            }
+            
+            // Check if it's a built-in template (cannot be modified)
+            const builtInTemplates = ['general', 'security', 'people', 'activity', 'objects', 
+                                     'anomaly', 'safety', 'traffic', 'quality', 'behavior', 'gestures'];
+            
+            if (builtInTemplates.includes(selectedTemplate)) {
+                openConfirmationModal(
+                    '<i class="fas fa-lock"></i> Built-in Template',
+                    'Cannot modify built-in templates. Would you like to create a new custom template with this content instead?',
+                    '<i class="fas fa-plus"></i> Create New',
+                    'btn-primary',
+                    () => {
+                        openAddTemplateModal();
+                        document.getElementById('customTemplatePrompt').value = currentText;
+                    }
+                );
+                return;
+            }
+            
+            // It's a custom template, so we can update it
+            try {
+                // Load existing custom templates
+                let customTemplates = {};
+                const stored = localStorage.getItem('customTemplates');
+                if (stored) {
+                    customTemplates = JSON.parse(stored);
+                }
+                
+                // Check if the template exists
+                if (!customTemplates[selectedTemplate]) {
+                    openConfirmationModal(
+                        '<i class="fas fa-exclamation-circle"></i> Template Not Found',
+                        'Template not found. Please select a valid custom template.',
+                        '<i class="fas fa-check"></i> OK',
+                        'btn-primary',
+                        null
+                    );
+                    return;
+                }
+                
+                // Confirm before saving
+                const templateName = preset.options[preset.selectedIndex].text;
+                
+                openConfirmationModal(
+                    '<i class="fas fa-save"></i> Save Template',
+                    `Save changes to template "${templateName}"?`,
+                    '<i class="fas fa-save"></i> Save',
+                    'btn-primary',
+                    () => {
+                        // Update the template
+                        customTemplates[selectedTemplate] = currentText;
+                        
+                        // Save to localStorage
+                        localStorage.setItem('customTemplates', JSON.stringify(customTemplates));
+                        
+                        // Update in-memory templates
+                        instructionTemplates[selectedTemplate] = currentText;
+                        
+                        console.log('✅ Template updated:', templateName);
+                        
+                        // Show success message
+                        const originalText = preset.options[preset.selectedIndex].text;
+                        preset.options[preset.selectedIndex].text = '✓ ' + originalText;
+                        setTimeout(() => {
+                            preset.options[preset.selectedIndex].text = originalText;
+                        }, 2000);
+                    }
+                );
+                
+            } catch (error) {
+                console.error('Error saving template:', error);
+                openConfirmationModal(
+                    '<i class="fas fa-exclamation-triangle"></i> Error',
+                    'Error saving template. Please try again.',
+                    '<i class="fas fa-check"></i> OK',
+                    'btn-danger',
+                    null
+                );
+            }
+        }
+
+        // Delete current template
+        function deleteCurrentTemplate() {
+            const preset = document.getElementById('instructionPreset');
+            const selectedTemplate = preset.value;
+            
+            if (!selectedTemplate) {
+                openConfirmationModal(
+                    '<i class="fas fa-exclamation-circle"></i> No Template Selected',
+                    'Please select a template first.',
+                    '<i class="fas fa-check"></i> OK',
+                    'btn-primary',
+                    null
+                );
+                return;
+            }
+            
+            // Check if it's a built-in template (cannot be deleted)
+            const builtInTemplates = ['general', 'security', 'people', 'activity', 'objects', 
+                                     'anomaly', 'safety', 'traffic', 'quality', 'behavior', 'gestures'];
+            
+            if (builtInTemplates.includes(selectedTemplate)) {
+                openConfirmationModal(
+                    '<i class="fas fa-lock"></i> Built-in Template',
+                    'Cannot delete built-in templates. Only custom templates can be deleted.',
+                    '<i class="fas fa-check"></i> OK',
+                    'btn-primary',
+                    null
+                );
+                return;
+            }
+            
+            // It's a custom template, so we can delete it
+            try {
+                // Load existing custom templates
+                let customTemplates = {};
+                const stored = localStorage.getItem('customTemplates');
+                if (stored) {
+                    customTemplates = JSON.parse(stored);
+                }
+                
+                // Check if the template exists
+                if (!customTemplates[selectedTemplate]) {
+                    openConfirmationModal(
+                        '<i class="fas fa-exclamation-circle"></i> Template Not Found',
+                        'Template not found. Please select a valid custom template.',
+                        '<i class="fas fa-check"></i> OK',
+                        'btn-primary',
+                        null
+                    );
+                    return;
+                }
+                
+                // Confirm before deleting
+                const templateName = preset.options[preset.selectedIndex].text;
+                
+                openConfirmationModal(
+                    '<i class="fas fa-trash-alt"></i> Delete Template',
+                    `Are you sure you want to delete template "${templateName}"? This action cannot be undone.`,
+                    '<i class="fas fa-trash-alt"></i> Delete',
+                    'btn-danger',
+                    () => {
+                        // Delete the template
+                        delete customTemplates[selectedTemplate];
+                        
+                        // Save to localStorage
+                        localStorage.setItem('customTemplates', JSON.stringify(customTemplates));
+                        
+                        // Remove from in-memory templates
+                        delete instructionTemplates[selectedTemplate];
+                        
+                        // Update dropdown
+                        updateTemplateDropdown();
+                        
+                        // Clear selection and instruction text
+                        preset.value = '';
+                        instructionText.value = '';
+                        
+                        console.log('🗑️ Template deleted:', templateName);
+                    }
+                );
+                
+            } catch (error) {
+                console.error('Error deleting template:', error);
+                openConfirmationModal(
+                    '<i class="fas fa-exclamation-triangle"></i> Error',
+                    'Error deleting template. Please try again.',
+                    '<i class="fas fa-check"></i> OK',
+                    'btn-danger',
+                    null
+                );
+            }
+        }
+
+        // Helper function to set response text (plain text)
+        function setResponseText(text, flagged = false) {
+            responseText.value = text;
+            responseText.classList.remove('flagged');
+            if (flagged) {
+                responseText.classList.add('flagged');
+            }
+        }
+
+        // Helper function to set response HTML (for highlighted content)
+        // Note: Since responseText is now a textarea (editable), we can't use HTML
+        // So we'll just use plain text with a note about flagged content
+        function setResponseHTML(html, flagged = false) {
+            // Strip HTML tags for textarea
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const plainText = tempDiv.textContent || tempDiv.innerText || '';
+            
+            responseText.value = plainText;
+            responseText.classList.remove('flagged');
+            if (flagged) {
+                responseText.classList.add('flagged');
+            }
+        }
+
+        // Show warning banner with message
+        function showWarningBanner(message) {
+            warningMessage.textContent = message;
+            warningBanner.classList.remove('hidden');
+        }
+
+        // Hide warning banner
+        function hideWarningBanner() {
+            warningBanner.classList.add('hidden');
+        }
+
+        // Test connection function for vLLM API
+        async function testConnection() {
+            const endpoint = baseURL.value.trim();
+            
+            updateStatus('processing', 'Testing vLLM connection...', 'wifi');
+            setResponseText("Testing connection to RHAIIS vLLM endpoint...");
+            hideWarningBanner();
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+                console.log('Testing vLLM connection to:', baseURL.value || 'internal service');
+                
+                // Get the selected model
+                const selectedModel = getSelectedModel();
+                console.log('Using model:', selectedModel);
+                
+                // Test the vLLM API endpoint with a simple chat completion request
+                const testPayload = {
+                    model: selectedModel,
+                    max_tokens: 20,
+                    messages: [
+                        { role: "user", content: "Hello, can you respond?" }
+                    ]
+                };
+
+                // Build API URL - append /v1/chat/completions to the service URL
+                const apiUrl = baseURL.value.trim() ? `${baseURL.value}/v1/chat/completions` : '/v1/chat/completions';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: getApiHeaders(),
+                    mode: 'cors',
+                    signal: controller.signal,
+                    body: JSON.stringify(testPayload)
+                });
+
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('ready', 'vLLM connection successful', 'check-circle');
+                    const serverInfo = baseURL.value.trim() || 'internal service';
+                    setResponseText(`✅ RHAIIS vLLM connection successful!\nEndpoint: ${serverInfo}\nModel: ${selectedModel}\nTest Response: ${data.choices?.[0]?.message?.content || 'API responded correctly'}`);
+                } else {
+                    const errorText = await response.text();
+                    updateStatus('ready', 'Server reachable but API error', 'exclamation-triangle');
+                    const serverInfo = baseURL.value.trim() || 'internal service';
+                    setResponseText(`⚠️ vLLM server reachable but API returned error: ${response.status}\nEndpoint: ${serverInfo}\nError: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('vLLM connection test error:', error);
+                updateStatus('error', 'vLLM connection failed', 'exclamation-triangle');
+                
+                const serverInfo = baseURL.value.trim() || 'internal service';
+                if (error.name === 'AbortError') {
+                    setResponseText(`❌ vLLM connection test timed out after 15 seconds.\nEndpoint: ${serverInfo}\n\nPlease check:\n1. Is the RHAIIS vLLM server running?\n2. Is the URL correct?\n3. Are you experiencing network issues?`);
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    setResponseText(`❌ CORS or connection error.\nEndpoint: ${serverInfo}\n\nFor vLLM servers:\n1. Make sure server started with --host 0.0.0.0\n2. Check if CORS is properly configured\n\nError: ${error.message}`);
+                } else {
+                    setResponseText(`❌ Connection error: ${error.message}\nEndpoint: ${serverInfo}`);
+                }
+            }
+        }
+
+        // Test guardrail connection
+        async function testGuardrailConnection() {
+            const endpoint = guardrailURL.value.trim();
+            
+            updateGuardrailStatus('processing', 'Testing guardrail connection...', 'shield-alt');
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                console.log('Testing guardrail connection to:', guardrailURL.value || 'internal service');
+                
+                // Test with a simple text
+                const testText = "This is a test message for content moderation.";
+                const result = await checkContentWithGuardrail(testText);
+                
+                clearTimeout(timeoutId);
+                
+                if (result.success) {
+                    const selectedModel = getSelectedGuardrailModel();
+                    updateGuardrailStatus('ready', 'Guardrail connection successful', 'check-circle');
+                    guardrailResult.textContent = `✅ Guardrail test successful!\nModel: ${selectedModel}\nTest content: "${testText}"\nResult: ${result.is_safe ? 'SAFE' : 'FLAGGED'}\nConfidence: ${result.confidence || 'N/A'}`;
+                    guardrailResult.className = `guardrail-result ${result.is_safe ? 'clean' : 'flagged'}`;
+                } else {
+                    updateGuardrailStatus('error', 'Guardrail connection failed', 'exclamation-triangle');
+                    guardrailResult.textContent = `❌ Guardrail test failed: ${result.error}`;
+                    guardrailResult.className = 'guardrail-result';
+                }
+            } catch (error) {
+                console.error('Guardrail connection test error:', error);
+                updateGuardrailStatus('error', 'Guardrail connection failed', 'exclamation-triangle');
+                guardrailResult.textContent = `❌ Guardrail connection error: ${error.message}`;
+                guardrailResult.className = 'guardrail-result';
+            }
+        }
+
+        // Check content with guardrail model
+        async function checkContentWithGuardrail(text) {
+            if (!guardrailEnabled.checked) {
+                return { success: true, is_safe: true, confidence: 1.0, flagged_content: [] };
+            }
+
+            console.log('🛡️ Checking content with Llama-Guard:', text.substring(0, 200) + '...');
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                // Build guardrail API URL - append /v1/chat/completions to the service URL
+                const apiUrl = guardrailURL.value.trim() ? 
+                    `${guardrailURL.value}/v1/chat/completions` : 
+                    '/guardrail/v1/chat/completions';
+
+                // Llama-Guard requires a specific prompt format
+                const guardPrompt = `Task: Check if there is unsafe content in 'User' messages in conversations according to our safety policy with the below categories.
+
+<BEGIN UNSAFE CONTENT CATEGORIES>
+S1: Violent Crimes - Terrorism, organized crime, murder, kidnapping
+S2: Non-Violent Crimes - Fraud, theft, vandalism, drug trafficking
+S3: Sex-Related Crimes - Sexual assault, trafficking, child abuse
+S4: Child Safety - Child exploitation or harm
+S5: Defamation - Spreading false information to harm reputation
+S6: Specialized Advice - Dangerous unqualified advice (legal, medical, financial)
+S7: Privacy Violations - Doxxing, sharing private information
+S8: Intellectual Property - Copyright or trademark violations
+S9: Indiscriminate Weapons - Instructions for WMDs or dangerous weapons
+S10: Hate Speech - Content attacking people based on identity
+S11: Suicide & Self-Harm - Encouragement or instructions for self-harm
+S12: Sexual Content - Explicit sexual content or pornography
+S13: Elections - Misinformation about voting processes
+S14: Code Interpreter Abuse - Malicious code execution
+S15: Profanity and Offensive Gestures - Obscene language, vulgar expressions, rude hand gestures (showing middle finger, giving the finger, raising middle finger, flipping off, obscene hand signs), disrespectful body language, insulting behavior. IMPORTANT: Any description of someone showing/raising/giving middle finger(s) or making rude/obscene/offensive gestures must be flagged as S15.
+<END UNSAFE CONTENT CATEGORIES>
+
+<BEGIN CONVERSATION>
+User: ${text}
+
+<END CONVERSATION>
+
+Provide your safety assessment for User in the above conversation:
+- First line must read 'safe' or 'unsafe'.
+- If unsafe, a second line must include a comma-separated list of violated categories.
+- Pay special attention to descriptions of hand gestures - if someone is described as showing their middle finger, making obscene gestures, or displaying offensive hand signs, this MUST be flagged as unsafe under S15.`;
+
+                // Get the selected guardrail model
+                const selectedGuardrailModel = getSelectedGuardrailModel();
+                console.log('🛡️ Using guardrail model:', selectedGuardrailModel);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: getGuardrailApiHeaders(),
+                    mode: 'cors',
+                    signal: controller.signal,
+                    body: JSON.stringify({
+                        model: selectedGuardrailModel,
+                        max_tokens: 100,
+                        temperature: 0.0,
+                        messages: [
+                            { 
+                                role: "user", 
+                                content: guardPrompt
+                            }
+                        ]
+                    })
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`Guardrail API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('🛡️ Full API response:', JSON.stringify(data, null, 2));
+                
+                const result = data.choices[0].message.content.trim();
+                const resultLower = result.toLowerCase();
+                
+                console.log('🛡️ Guardrail check result (raw):', result);
+                console.log('🛡️ Guardrail check result (lowercase):', resultLower);
+                console.log('🛡️ Original text being checked:', text.substring(0, 200));
+                
+                // Parse response - handle multiple formats:
+                // 1. Llama Guard format: "safe" or "unsafe\nS1, S2"
+                // 2. Custom endpoint formats:
+                //    - "Issue detected: NO/YES"
+                //    - "Inappropriate content detected: NO/YES"
+                //    - Just "NO" or "YES"
+                //    - "safe" or "unsafe" variants
+                let is_safe;
+                let flagged_content;
+                let confidence;
+                
+                // Check for custom endpoint format - be very flexible
+                const hasIssueDetected = resultLower.includes('issue detected');
+                const hasInappropriateContent = resultLower.includes('inappropriate content');
+                const hasContentDetected = resultLower.includes('content detected');
+                
+                // Check for simple Yes/No responses (exact match or just the word)
+                const isSimpleNo = /^no\.?$/i.test(result.trim());
+                const isSimpleYes = /^yes\.?$/i.test(result.trim());
+                const hasNo = /\bno\b/i.test(result);
+                const hasYes = /\byes\b/i.test(result);
+                
+                console.log('🛡️ Detection checks:', {
+                    hasIssueDetected,
+                    hasInappropriateContent,
+                    hasContentDetected,
+                    isSimpleNo,
+                    isSimpleYes,
+                    hasNo,
+                    hasYes
+                });
+                
+                // If it looks like a custom format response OR simple Yes/No
+                if (hasIssueDetected || hasInappropriateContent || hasContentDetected || isSimpleNo || isSimpleYes || (hasNo || hasYes)) {
+                    // Determine safety based on response
+                    if (isSimpleNo || (hasNo && !hasYes)) {
+                        is_safe = true;  // "No" means no issues detected
+                    } else if (isSimpleYes || (hasYes && !hasNo)) {
+                        is_safe = false; // "Yes" means issues detected
+                    } else {
+                        // If both or neither, default to safe
+                        is_safe = true;
+                    }
+                    
+                    console.log('🛡️ Custom endpoint format detected!');
+                    console.log('🛡️ Custom format analysis:', { 
+                        result, 
+                        isSimpleNo,
+                        isSimpleYes,
+                        hasNo, 
+                        hasYes, 
+                        is_safe,
+                        'Decision': is_safe ? 'SAFE ✅' : 'UNSAFE ⚠️'
+                    });
+                    
+                    flagged_content = is_safe ? [] : [result];
+                    confidence = is_safe ? 0.95 : 0.85;
+                    
+                    // Return early for custom format - skip ALL secondary checks
+                    console.log('🛡️ Returning early, skipping secondary checks');
+                    return {
+                        success: true,
+                        is_safe: is_safe,
+                        confidence: confidence,
+                        flagged_content: flagged_content,
+                        raw_result: result
+                    };
+                }
+                
+                // Llama Guard format: "safe" or "unsafe"
+                console.log('🛡️ Using Llama Guard format parsing');
+                is_safe = resultLower.startsWith('safe') && !resultLower.includes('unsafe');
+                flagged_content = is_safe ? [] : [result];
+                confidence = is_safe ? 0.95 : 0.85;
+                
+                console.log('🛡️ Llama Guard format result:', { is_safe });
+                
+                // Secondary check: Even if Llama-Guard says safe, check for explicit gesture keywords
+                if (is_safe) {
+                    const gestureKeywords = [
+                        'middle finger', 'giving the finger', 'obscene gesture', 'rude gesture',
+                        'offensive gesture', 'vulgar gesture', 'offensive hand sign', 
+                        'inappropriate gesture', 'disrespectful gesture', 'flipping.*off',
+                        'showing.*middle finger', 'raising.*middle finger'
+                    ];
+                    
+                    const lowerText = text.toLowerCase();
+                    const detectedGestures = gestureKeywords.filter(keyword => {
+                        // Support simple regex patterns
+                        if (keyword.includes('.*')) {
+                            const regex = new RegExp(keyword);
+                            return regex.test(lowerText);
+                        }
+                        return lowerText.includes(keyword);
+                    });
+                    
+                    if (detectedGestures.length > 0) {
+                        console.warn('🚨 Secondary check override! Llama-Guard missed explicit gestures:', detectedGestures);
+                        is_safe = false;
+                        flagged_content = ['S15 (Secondary Detection)', ...detectedGestures.map(k => `Detected: "${k}"`)];
+                        confidence = 0.8;
+                    }
+                }
+                
+                console.log(`🛡️ Content ${is_safe ? '✅ SAFE' : '⚠️ UNSAFE'}`);
+                if (!is_safe) {
+                    console.log('🚨 Flagged categories:', flagged_content);
+                }
+                
+                return {
+                    success: true,
+                    is_safe: is_safe,
+                    confidence: confidence,
+                    flagged_content: flagged_content,
+                    raw_result: result
+                };
+
+            } catch (error) {
+                console.error('Guardrail check error:', error);
+                
+                // Fallback: simple keyword-based detection
+                const inappropriateKeywords = [
+                    'hate', 'violence', 'harmful', 'offensive', 'inappropriate', 
+                    'dangerous', 'illegal', 'explicit', 'abusive', 'threatening',
+                    'middle finger', 'giving the finger', 'obscene gesture', 'rude gesture',
+                    'offensive gesture', 'vulgar gesture', 'profane', 'obscene', 'vulgar',
+                    'offensive hand sign', 'inappropriate gesture', 'disrespectful gesture'
+                ];
+                
+                const lowerText = text.toLowerCase();
+                const flaggedKeywords = inappropriateKeywords.filter(keyword => 
+                    lowerText.includes(keyword)
+                );
+                
+                if (flaggedKeywords.length > 0) {
+                    console.warn('🚨 Fallback detection triggered! Found keywords:', flaggedKeywords);
+                    return {
+                        success: true,
+                        is_safe: false,
+                        confidence: 0.7,
+                        flagged_content: flaggedKeywords.map(k => `Keyword: ${k}`),
+                        fallback: true
+                    };
+                }
+                
+                return {
+                    success: false,
+                    error: error.message,
+                    is_safe: true // Default to safe if guardrail fails
+                };
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Highlight flagged content in text
+        function highlightFlaggedContent(text, flaggedContent) {
+            if (!flaggedContent || flaggedContent.length === 0) {
+                return escapeHtml(text);
+            }
+
+            // First escape HTML to prevent XSS
+            let highlightedText = escapeHtml(text);
+            
+            // Then add highlighting spans
+            flaggedContent.forEach(flagged => {
+                const escapedFlagged = escapeHtml(flagged);
+                const regex = new RegExp(`\\b${escapedFlagged.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+                highlightedText = highlightedText.replace(regex, `<span class="highlighted-content">$&</span>`);
+            });
+            
+            return highlightedText;
+        }
+
+        // Theme management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        // Status indicator management
+        function updateStatus(type, message, icon = 'circle') {
+            statusIndicator.className = `status-indicator status-${type}`;
+            statusIndicator.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
+            
+            if (type === 'processing') {
+                statusIndicator.classList.add('pulse');
+            } else {
+                statusIndicator.classList.remove('pulse');
+            }
+        }
+
+        function updateGuardrailStatus(type, message, icon = 'shield-alt') {
+            guardrailStatus.className = `status-indicator status-${type}`;
+            guardrailStatus.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
+            
+            if (type === 'processing') {
+                guardrailStatus.classList.add('pulse');
+            } else {
+                guardrailStatus.classList.remove('pulse');
+            }
+        }
+
+        // Send chat completion request to vLLM API
+        async function sendChatCompletionRequest(instruction, imageBase64URL) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout for vision models
+            
+            try {
+                // Build API URL - append /v1/chat/completions to the service URL
+                const apiUrl = baseURL.value.trim() ? `${baseURL.value}/v1/chat/completions` : '/v1/chat/completions';
+                
+                // Add timestamp to prevent server-side caching
+                const timestamp = new Date().toISOString();
+                const imageHash = imageBase64URL.substring(imageBase64URL.length - 20); // Last 20 chars as simple identifier
+                
+                // Get the selected model
+                const selectedModel = getSelectedModel();
+                
+                const payload = {
+                    model: selectedModel,
+                    max_tokens: 150,
+                    temperature: 0.3, // Lower temperature for more consistent, less random results
+                    top_p: 0.95,
+                    frequency_penalty: 0.0,
+                    presence_penalty: 0.0,
+                    messages: [
+                        { 
+                            role: 'user', 
+                            content: [
+                                { type: 'text', text: `${instruction} [Analysis timestamp: ${timestamp}]` },
+                                { 
+                                    type: 'image_url', 
+                                    image_url: {
+                                        url: imageBase64URL,
+                                        detail: "auto"
+                                    } 
+                                }
+                            ] 
+                        }
+                    ],
+                    stream: false
+                };
+                
+                console.log('📤 Sending to VLM:', apiUrl);
+                console.log('   - Model:', payload.model);
+                console.log('   - Timestamp:', timestamp);
+                console.log('   - Image hash (last 20 chars):', imageHash);
+                console.log('   - Instruction:', instruction.substring(0, 50) + '...');
+                console.log('   - Image size:', imageBase64URL.length, 'bytes');
+                console.log('   - Temperature: 0.3 (lower = more consistent)');
+                console.log('   - Message format: text + image_url (base64)');
+                
+                // Track request start time
+                const requestStartTime = performance.now();
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: getApiHeaders(),
+                    mode: 'cors',
+                    signal: controller.signal,
+                    body: JSON.stringify(payload)
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error('❌ vLLM server error response:', response.status, errorData);
+                    return { error: `vLLM Server error: ${response.status} - ${errorData}` };
+                }
+                
+                const data = await response.json();
+                const requestEndTime = performance.now();
+                const latencyMs = requestEndTime - requestStartTime;
+                
+                const vlmResponse = data.choices[0].message.content;
+                console.log('✅ VLM Response received successfully');
+                console.log('   - Response length:', vlmResponse.length, 'characters');
+                console.log('   - Response preview:', vlmResponse.substring(0, 100) + '...');
+                
+                // Extract performance metrics from the response
+                const metrics = {
+                    latency: latencyMs,
+                    usage: data.usage || {},
+                    model: data.model || payload.model,
+                    created: data.created || null
+                };
+                
+                console.log('📊 Performance Metrics:', metrics);
+                
+                // Update the performance metrics display
+                updatePerformanceMetrics(metrics);
+                
+                return vlmResponse;
+                
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.error('vLLM fetch error details:', error);
+                
+                if (error.name === 'AbortError') {
+                    return { error: 'Request timed out after 45 seconds. Please check your RHAIIS vLLM endpoint and network connection.' };
+                } else if (error.message.includes('Failed to fetch')) {
+                    return { error: `Failed to connect to vLLM API endpoint. Please check:\n1. Is the RHAIIS vLLM server running?\n2. Is the endpoint URL correct?\n3. Are you experiencing network issues?\n4. Does the server support CORS?\n\nEndpoint: ${baseURL.value}\nError: ${error.message}` };
+                } else {
+                    return { error: `Network error: ${error.message}` };
+                }
+            }
+        }
+
+        // Update performance metrics display
+        function updatePerformanceMetrics(metrics) {
+            const { latency, usage, model } = metrics;
+            
+            // Update latency
+            const latencyElement = document.getElementById('latencyMs');
+            if (latencyElement) {
+                latencyElement.textContent = `${latency.toFixed(0)} ms`;
+            }
+            
+            // Update token counts from usage data
+            if (usage) {
+                const promptTokensElement = document.getElementById('promptTokens');
+                const completionTokensElement = document.getElementById('completionTokens');
+                const totalTokensElement = document.getElementById('totalTokens');
+                
+                if (promptTokensElement && usage.prompt_tokens !== undefined) {
+                    promptTokensElement.textContent = usage.prompt_tokens.toString();
+                }
+                
+                if (completionTokensElement && usage.completion_tokens !== undefined) {
+                    completionTokensElement.textContent = usage.completion_tokens.toString();
+                }
+                
+                if (totalTokensElement && usage.total_tokens !== undefined) {
+                    totalTokensElement.textContent = usage.total_tokens.toString();
+                }
+                
+                // Calculate tokens per second
+                if (usage.completion_tokens && latency > 0) {
+                    const tokensPerSecond = (usage.completion_tokens / (latency / 1000)).toFixed(2);
+                    const tokensPerSecondElement = document.getElementById('tokensPerSecond');
+                    if (tokensPerSecondElement) {
+                        tokensPerSecondElement.textContent = tokensPerSecond;
+                    }
+                }
+                
+                // Calculate throughput (total tokens per second)
+                if (usage.total_tokens && latency > 0) {
+                    const throughput = (usage.total_tokens / (latency / 1000)).toFixed(2);
+                    const throughputElement = document.getElementById('throughput');
+                    if (throughputElement) {
+                        throughputElement.textContent = `${throughput} tok/s`;
+                    }
+                }
+            }
+            
+            console.log('📊 Updated performance metrics display');
+        }
+
+        // Thumbnail gallery functions
+        function addThumbnail(imageDataURL, isSafe = true) {
+            const thumbnailGallery = document.getElementById('thumbnailGallery');
+            const thumbnailCount = document.getElementById('thumbnailCount');
+            
+            // Remove placeholder if it exists
+            const placeholder = thumbnailGallery.querySelector('.thumbnail-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Create thumbnail item
+            const thumbnailItem = document.createElement('div');
+            thumbnailItem.className = 'thumbnail-item';
+            
+            const img = document.createElement('img');
+            img.src = imageDataURL;
+            img.alt = 'Processed image';
+            
+            const timestamp = document.createElement('div');
+            timestamp.className = 'thumbnail-timestamp';
+            const now = new Date();
+            timestamp.textContent = formatTimestamp(now);
+            
+            const status = document.createElement('div');
+            status.className = isSafe ? 'thumbnail-status' : 'thumbnail-status flagged';
+            status.title = isSafe ? 'Content Safe' : 'Content Flagged';
+            
+            thumbnailItem.appendChild(img);
+            thumbnailItem.appendChild(timestamp);
+            thumbnailItem.appendChild(status);
+            
+            // Add click handler to show full image
+            thumbnailItem.onclick = () => showFullImage(imageDataURL, now);
+            
+            // Add to gallery (prepend to show newest first)
+            thumbnailGallery.insertBefore(thumbnailItem, thumbnailGallery.firstChild);
+            
+            // Store in history
+            thumbnailHistory.unshift({
+                imageData: imageDataURL,
+                timestamp: now,
+                isSafe: isSafe
+            });
+            
+            // Limit thumbnails to prevent memory issues
+            if (thumbnailHistory.length > MAX_THUMBNAILS) {
+                thumbnailHistory.pop();
+                const lastThumbnail = thumbnailGallery.lastElementChild;
+                if (lastThumbnail && lastThumbnail.classList.contains('thumbnail-item')) {
+                    lastThumbnail.remove();
+                }
+            }
+            
+            // Update count
+            thumbnailCount.textContent = `${thumbnailHistory.length} image${thumbnailHistory.length !== 1 ? 's' : ''}`;
+            
+            console.log('📸 Added thumbnail to gallery');
+        }
+
+        function clearThumbnails() {
+            const thumbnailGallery = document.getElementById('thumbnailGallery');
+            const thumbnailCount = document.getElementById('thumbnailCount');
+            
+            thumbnailGallery.innerHTML = `
+                <div class="thumbnail-placeholder">
+                    <i class="fas fa-camera"></i>
+                    <p>Start processing to see image thumbnails here</p>
+                </div>
+            `;
+            
+            thumbnailHistory = [];
+            thumbnailCount.textContent = '0 images';
+            
+            console.log('🗑️ Cleared thumbnail gallery');
+        }
+
+        function showFullImage(imageDataURL, timestamp) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                padding: 2rem;
+                cursor: pointer;
+            `;
+            
+            const img = document.createElement('img');
+            img.src = imageDataURL;
+            img.style.cssText = `
+                max-width: 90%;
+                max-height: 80%;
+                border-radius: 8px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            `;
+            
+            const info = document.createElement('div');
+            info.style.cssText = `
+                color: white;
+                margin-top: 1rem;
+                font-size: 1rem;
+                text-align: center;
+            `;
+            info.textContent = `Captured: ${formatTimestamp(timestamp)} - Click anywhere to close`;
+            
+            modal.appendChild(img);
+            modal.appendChild(info);
+            
+            modal.onclick = () => modal.remove();
+            
+            document.body.appendChild(modal);
+        }
+
+        // Camera initialization
+        async function initCamera() {
+            try {
+                updateStatus('processing', 'Requesting camera access...', 'camera');
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = stream;
+                
+                // Check if API endpoint is set
+                if (!baseURL.value.trim()) {
+                    updateStatus('ready', 'Camera ready - Using internal service', 'check-circle');
+                    setResponseText("✅ Camera access granted.\n\n🔄 Using internal service rhaiis-service\n📹 Ready to start VLM processing");
+                } else {
+                    updateStatus('ready', 'Camera ready - Custom endpoint configured', 'check-circle');
+                    setResponseText(`✅ Camera access granted.\n\n🌐 Custom endpoint: ${baseURL.value}\n📹 Ready to start VLM processing`);
+                }
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                updateStatus('error', 'Camera access denied', 'exclamation-triangle');
+                
+                // Show user-friendly error message
+                if (err.name === 'NotAllowedError') {
+                    setResponseText("❌ Camera access was denied. Please allow camera permissions and refresh the page.");
+                } else if (err.name === 'NotFoundError') {
+                    setResponseText("❌ No camera found. Please connect a camera and refresh the page.");
+                } else {
+                    setResponseText(`❌ Camera error: ${err.message}\n\nPlease check your camera and try again.`);
+                }
+            }
+        }
+
+        function captureImage() {
+            if (!stream || !video.videoWidth) {
+                console.warn("Video stream not ready for capture.");
+                return null;
+            }
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            
+            // Clear canvas before drawing to ensure fresh capture
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            const imageHash = imageData.substring(imageData.length - 30, imageData.length - 10); // Sample middle section
+            console.log('📸 New image captured - Hash sample:', imageHash, '- Size:', imageData.length);
+            
+            return imageData;
+        }
+
+        async function sendData() {
+            if (!isProcessing) return;
+
+            const instruction = instructionText.value;
+            const imageBase64URL = captureImage();
+
+            if (!imageBase64URL) {
+                updateStatus('error', 'Failed to capture image', 'exclamation-triangle');
+                setResponseText("Failed to capture image. Stream might not be active.");
+                hideWarningBanner();
+                return;
+            }
+
+            try {
+                const imageSize = imageBase64URL.length;
+                console.log(`📸 Captured image from live feed (${imageSize} bytes)`);
+                console.log(`📝 Instruction: ${instruction}`);
+                console.log(`🚀 Sending to VLM endpoint: ${baseURL.value || 'internal service'}`);
+                
+                updateStatus('processing', 'Processing with VLM...', 'brain');
+                const response = await sendChatCompletionRequest(instruction, imageBase64URL);
+                
+                // Check if response is an error
+                if (response && typeof response === 'object' && response.error) {
+                    updateStatus('error', 'API request failed', 'exclamation-triangle');
+                    setResponseText(response.error);
+                    hideWarningBanner();
+                    return;
+                }
+                
+                // Check content with guardrail if enabled
+                if (guardrailEnabled.checked) {
+                    updateGuardrailStatus('processing', 'Checking content safety...', 'shield-alt');
+                    
+                    const guardrailCheck = await checkContentWithGuardrail(response);
+                    
+                    if (guardrailCheck.success) {
+                        if (guardrailCheck.is_safe) {
+                            // Content is safe
+                            updateGuardrailStatus('ready', 'Content approved', 'check-circle');
+                            guardrailResult.textContent = `✅ Content is safe\nConfidence: ${(guardrailCheck.confidence * 100).toFixed(1)}%`;
+                            guardrailResult.className = 'guardrail-result clean';
+                            setResponseText(response, false);
+                            hideWarningBanner();
+                            
+                            // Add to violation history
+                            addViolationRecord(true, [], guardrailCheck.confidence, response);
+                            
+                            // Add thumbnail to gallery
+                            addThumbnail(imageBase64URL, true);
+                            
+                            console.log('✅ Guardrail check: Content SAFE');
+                        } else {
+                            // Content flagged - show warnings
+                            updateGuardrailStatus('flagged', 'Content flagged', 'exclamation-triangle');
+                            
+                            const issuesText = guardrailCheck.flagged_content.join(', ');
+                            const confidenceText = `${(guardrailCheck.confidence * 100).toFixed(1)}%`;
+                            const fallbackNote = guardrailCheck.fallback ? '\n(Fallback detection used)' : '';
+                            
+                            guardrailResult.innerHTML = `⚠️ <strong>Content flagged!</strong><br>Issues detected: ${issuesText}<br>Confidence: ${confidenceText}${fallbackNote}`;
+                            guardrailResult.className = 'guardrail-result flagged';
+                            
+                            // Show prominent warning banner
+                            showWarningBanner(`Inappropriate content detected: ${issuesText}`);
+                            
+                            // Highlight flagged content in the response
+                            const highlightedResponse = highlightFlaggedContent(response, guardrailCheck.flagged_content);
+                            setResponseHTML(highlightedResponse, true);
+                            
+                            // Add to violation history
+                            addViolationRecord(false, guardrailCheck.flagged_content, guardrailCheck.confidence, response);
+                            
+                            // Add thumbnail to gallery (flagged)
+                            addThumbnail(imageBase64URL, false);
+                            
+                            console.warn('⚠️ Guardrail check: Content FLAGGED', guardrailCheck.flagged_content);
+                            
+                            // Optional: Play alert sound (if desired)
+                            // new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVq/q8a5dGAg+ltv11YE2BzqM0fPOdzMGKX3G8N2UPgwUYr3r7qdWFApEn+PzwWshBzmK0/PWfzYHOYzT89aCNgc6kdPy2YE3BzmN1PPVgTYHOpHT8tiCNgc5jdTz1oE2BzqR0vLYgjYHOY3U89aBNgc6kdPy2IQ2BzmN1PLYgjYHOpHT8tiCNgc5jdTz1oE2BzqR0/LYgTYHOY3U89WCNgc6kdPy2IM2BzmN1PLYgjUHOpHT8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYHOY3U89WCNgc6kdPy2IQ2BzmN1PLYgjUHOpHU8teCNgc5jdPy14I2BzqR1PLYgjYH').play().catch(() => {});
+                        }
+                    } else {
+                        // Guardrail check failed
+                        updateGuardrailStatus('error', 'Guardrail check failed', 'exclamation-triangle');
+                        guardrailResult.textContent = `❌ Guardrail check failed: ${guardrailCheck.error}\nDisplaying content without filtering.`;
+                        guardrailResult.className = 'guardrail-result';
+                        setResponseText(response, false);
+                        
+                        // Show warning that content couldn't be checked
+                        showWarningBanner(`⚠️ Unable to verify content safety: ${guardrailCheck.error}`);
+                        
+                        // Add to violation history as "Error" status
+                        addViolationRecord(false, ['Guardrail Error: ' + guardrailCheck.error], 0.0, response);
+                        
+                        // Add thumbnail (treat as safe since we can't verify)
+                        addThumbnail(imageBase64URL, true);
+                        
+                        console.error('❌ Guardrail check failed:', guardrailCheck.error);
+                    }
+                } else {
+                    // Guardrails disabled
+                    updateGuardrailStatus('ready', 'Guardrails disabled', 'shield-alt');
+                    guardrailResult.textContent = "Guardrails are disabled. Content not being filtered.";
+                    guardrailResult.className = 'guardrail-result';
+                    setResponseText(response, false);
+                    hideWarningBanner();
+                    
+                    // Add thumbnail to gallery
+                    addThumbnail(imageBase64URL, true);
+                }
+                
+                updateStatus('ready', 'Processing active', 'play-circle');
+            } catch (error) {
+                console.error('Error sending data:', error);
+                updateStatus('error', 'API request failed', 'exclamation-triangle');
+                setResponseText(`Error: ${error.message}`);
+                hideWarningBanner();
+            }
+        }
+
+        function handleStart() {
+            // Check if we're in upload mode
+            if (currentMode === 'upload') {
+                updateStatus('error', 'Use "Analyze Uploaded Image" button', 'info-circle');
+                setResponseText("In upload mode, please use the 'Analyze Uploaded Image' button instead of 'Start Processing'.");
+                return;
+            }
+            
+            if (!stream || !stream.active) {
+                updateStatus('error', 'Camera not available', 'exclamation-triangle');
+                setResponseText("❌ Camera is not available or not active.\n\nPlease check:\n1. Camera permissions are granted\n2. Camera is not being used by another application\n3. Try refreshing the page");
+                return;
+            }
+            
+            const endpoint = baseURL.value.trim();
+            if (!endpoint) {
+                console.log('Using internal service for RHAIIS vLLM (empty baseURL)');
+            }
+
+            isProcessing = true;
+            
+            // Update button appearance
+            startButton.innerHTML = '<i class="fas fa-stop"></i><span>Stop Processing</span>';
+            startButton.classList.remove('btn-primary');
+            startButton.classList.add('btn-danger');
+
+            // Disable controls
+            instructionText.disabled = true;
+            intervalSelect.disabled = true;
+            baseURL.disabled = true;
+            guardrailURL.disabled = true;
+
+            updateStatus('processing', 'Starting VLM processing...', 'play-circle');
+            setResponseText("Processing started with Vision Language Model...");
+            hideWarningBanner();
+
+            const intervalMs = parseInt(intervalSelect.value, 10);
+            
+            // Initial immediate call
+            sendData(); 
+            
+            // Then set interval
+            intervalId = setInterval(sendData, intervalMs);
+        }
+
+        function handleStop() {
+            isProcessing = false;
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            
+            // Update button appearance
+            startButton.innerHTML = '<i class="fas fa-play"></i><span>Start Processing</span>';
+            startButton.classList.remove('btn-danger');
+            startButton.classList.add('btn-primary');
+
+            // Enable controls
+            instructionText.disabled = false;
+            intervalSelect.disabled = false;
+            baseURL.disabled = false;
+            guardrailURL.disabled = false;
+
+            updateStatus('ready', 'Ready to start', 'check-circle');
+            const currentText = responseText.textContent;
+            if (currentText && currentText.startsWith("Processing started")) {
+                setResponseText("Processing stopped.");
+            }
+        }
+
+        // Mode switching functions
+        function switchToWebcamMode() {
+            currentMode = 'webcam';
+            webcamModeBtn.classList.add('active');
+            uploadModeBtn.classList.remove('active');
+            webcamView.classList.remove('hidden');
+            uploadView.classList.add('hidden');
+            
+            // Stop processing if running
+            if (isProcessing) {
+                handleStop();
+            }
+            
+            // Check if camera is available
+            if (!stream || !stream.active) {
+                updateStatus('error', 'Camera not available', 'exclamation-triangle');
+                setResponseText("❌ Camera is not available. Please grant camera permissions and refresh the page.\n\nIf you previously denied camera access, you'll need to:\n1. Check your browser's camera permissions\n2. Allow camera access for this site\n3. Refresh the page");
+                hideWarningBanner();
+                
+                // Try to initialize camera
+                initCamera().catch(() => {
+                    console.log('Camera initialization failed when switching to webcam mode');
+                });
+            } else {
+                updateStatus('ready', 'Webcam mode - Ready to start', 'video');
+                setResponseText("Switched to webcam mode. Click 'Start Processing' to begin.");
+                hideWarningBanner();
+            }
+        }
+        
+        function switchToUploadMode() {
+            currentMode = 'upload';
+            uploadModeBtn.classList.add('active');
+            webcamModeBtn.classList.remove('active');
+            uploadView.classList.remove('hidden');
+            webcamView.classList.add('hidden');
+            
+            // Stop processing if running
+            if (isProcessing) {
+                handleStop();
+            }
+            
+            updateStatus('ready', 'Upload mode - Select an image', 'upload');
+            setResponseText("Switched to upload mode. Upload an image to analyze.");
+            hideWarningBanner();
+        }
+        
+        // Handle image upload
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload a valid image file.');
+                return;
+            }
+            
+            // Validate file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Image file is too large. Please upload an image smaller than 10MB.');
+                return;
+            }
+            
+            updateStatus('processing', 'Loading image...', 'spinner');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedImageData = e.target.result;
+                uploadedImage.src = uploadedImageData;
+                uploadedImage.classList.remove('hidden');
+                uploadArea.classList.add('hidden');
+                uploadActions.classList.remove('hidden');
+                
+                updateStatus('ready', 'Image loaded - Ready to analyze', 'check-circle');
+                setResponseText(`Image "${file.name}" loaded successfully. Click "Analyze Image" to process it with VLM and Guardrail.`);
+            };
+            reader.onerror = function() {
+                updateStatus('error', 'Failed to load image', 'exclamation-triangle');
+                setResponseText('Error loading image. Please try again.');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Drag and drop support
+        function setupDragAndDrop() {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    imageFileInput.files = files;
+                    handleImageUpload({ target: { files: files } });
+                }
+            });
+        }
+        
+        // Analyze uploaded image
+        async function analyzeUploadedImage() {
+            if (!uploadedImageData) {
+                alert('Please upload an image first.');
+                return;
+            }
+            
+            const instruction = instructionText.value;
+            
+            try {
+                updateStatus('processing', 'Processing with VLM...', 'brain');
+                setResponseText("Analyzing uploaded image with Vision Language Model...");
+                hideWarningBanner();
+                
+                // Disable analyze button while processing
+                analyzeUploadBtn.disabled = true;
+                
+                const response = await sendChatCompletionRequest(instruction, uploadedImageData);
+                
+                // Check if response is an error
+                if (response && typeof response === 'object' && response.error) {
+                    updateStatus('error', 'API request failed', 'exclamation-triangle');
+                    setResponseText(response.error);
+                    hideWarningBanner();
+                    return;
+                }
+                
+                // Check content with guardrail if enabled
+                if (guardrailEnabled.checked) {
+                    updateGuardrailStatus('processing', 'Checking content safety...', 'shield-alt');
+                    
+                    const guardrailCheck = await checkContentWithGuardrail(response);
+                    
+                    if (guardrailCheck.success) {
+                        if (guardrailCheck.is_safe) {
+                            // Content is safe
+                            updateGuardrailStatus('ready', 'Content approved', 'check-circle');
+                            guardrailResult.textContent = `✅ Content is safe\nConfidence: ${(guardrailCheck.confidence * 100).toFixed(1)}%`;
+                            guardrailResult.className = 'guardrail-result clean';
+                            setResponseText(response, false);
+                            hideWarningBanner();
+                            
+                            // Add to violation history
+                            addViolationRecord(true, [], guardrailCheck.confidence, response);
+                            
+                            // Add thumbnail to gallery
+                            addThumbnail(uploadedImageData, true);
+                            
+                            console.log('✅ Guardrail check: Content SAFE');
+                        } else {
+                            // Content flagged - show warnings
+                            updateGuardrailStatus('flagged', 'Content flagged', 'exclamation-triangle');
+                            
+                            const issuesText = guardrailCheck.flagged_content.join(', ');
+                            const confidenceText = `${(guardrailCheck.confidence * 100).toFixed(1)}%`;
+                            const fallbackNote = guardrailCheck.fallback ? '\n(Fallback detection used)' : '';
+                            
+                            guardrailResult.innerHTML = `⚠️ <strong>Content flagged!</strong><br>Issues detected: ${issuesText}<br>Confidence: ${confidenceText}${fallbackNote}`;
+                            guardrailResult.className = 'guardrail-result flagged';
+                            
+                            // Show prominent warning banner
+                            showWarningBanner(`Inappropriate content detected: ${issuesText}`);
+                            
+                            // Highlight flagged content in the response
+                            const highlightedResponse = highlightFlaggedContent(response, guardrailCheck.flagged_content);
+                            setResponseHTML(highlightedResponse, true);
+                            
+                            // Add to violation history
+                            addViolationRecord(false, guardrailCheck.flagged_content, guardrailCheck.confidence, response);
+                            
+                            // Add thumbnail to gallery (flagged)
+                            addThumbnail(uploadedImageData, false);
+                            
+                            console.warn('⚠️ Guardrail check: Content FLAGGED', guardrailCheck.flagged_content);
+                        }
+                    } else {
+                        // Guardrail check failed
+                        updateGuardrailStatus('error', 'Guardrail check failed', 'exclamation-triangle');
+                        guardrailResult.textContent = `❌ Guardrail check failed: ${guardrailCheck.error}\nDisplaying content without filtering.`;
+                        guardrailResult.className = 'guardrail-result';
+                        setResponseText(response, false);
+                        
+                        // Show warning that content couldn't be checked
+                        showWarningBanner(`⚠️ Unable to verify content safety: ${guardrailCheck.error}`);
+                        
+                        // Add to violation history as "Error" status
+                        addViolationRecord(false, ['Guardrail Error: ' + guardrailCheck.error], 0.0, response);
+                        
+                        // Add thumbnail (treat as safe since we can't verify)
+                        addThumbnail(uploadedImageData, true);
+                        
+                        console.error('❌ Guardrail check failed:', guardrailCheck.error);
+                    }
+                } else {
+                    // Guardrails disabled
+                    updateGuardrailStatus('ready', 'Guardrails disabled', 'shield-alt');
+                    guardrailResult.textContent = "Guardrails are disabled. Content not being filtered.";
+                    guardrailResult.className = 'guardrail-result';
+                    setResponseText(response, false);
+                    hideWarningBanner();
+                    
+                    // Add thumbnail to gallery
+                    addThumbnail(uploadedImageData, true);
+                }
+                
+                updateStatus('ready', 'Analysis complete', 'check-circle');
+                
+            } catch (error) {
+                console.error('Error analyzing uploaded image:', error);
+                updateStatus('error', 'Analysis failed', 'exclamation-triangle');
+                setResponseText(`Error: ${error.message}`);
+                hideWarningBanner();
+            } finally {
+                analyzeUploadBtn.disabled = false;
+            }
+        }
+        
+        // Reset upload view
+        function resetUploadView() {
+            uploadedImageData = null;
+            uploadedImage.src = '';
+            uploadedImage.classList.add('hidden');
+            uploadArea.classList.remove('hidden');
+            uploadActions.classList.add('hidden');
+            imageFileInput.value = '';
+            
+            updateStatus('ready', 'Upload mode - Select an image', 'upload');
+            setResponseText("Upload cleared. Select a new image to analyze.");
+            hideWarningBanner();
+        }
+
+        // Event listeners
+        startButton.addEventListener('click', () => {
+            if (isProcessing) {
+                handleStop();
+            } else {
+                handleStart();
+            }
+        });
+
+        themeToggle.addEventListener('click', toggleTheme);
+        aboutToggle.addEventListener('click', openAboutModal);
+
+        // Add fade-in animation to cards
+        function addFadeInAnimation() {
+            const cards = document.querySelectorAll('.video-section, .controls-section, .guardrail-section, .input-card, .header');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('fade-in');
+                }, index * 100);
+            });
+        }
+
+        // Initialize everything when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initCamera();
+            setupDragAndDrop();
+            addFadeInAnimation();
+            loadCustomTemplates();
+        });
+
+        // Cleanup when page is closed/navigated away
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                if (isProcessing) {
+                    handleStop();
+                } else {
+                    handleStart();
+                }
+            }
+            if (e.key === 'Escape' && isProcessing) {
+                handleStop();
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Hat AI Showcase - Demo Platform</title>
+    <link rel="icon" type="image/png" href="../assets/redhat.png">
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700;900&family=Red+Hat+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /* Layout Variables */
+            --sidebar-width: 300px;
+            
+            /* Red Hat Brand Colors */
+            --rh-red: #EE0000;
+            --rh-red-dark: #A60000;
+            --rh-red-light: #FF4444;
+            --rh-red-glow: rgba(238, 0, 0, 0.3);
+            --rh-black: #000000;
+            --rh-gray-dark: #151515;
+            --rh-gray: #6A6E73;
+            --rh-gray-light: #D2D2D2;
+            --rh-white: #FFFFFF;
+            
+            /* Modern UI Colors - Dark Theme (Red Hat Official Style) */
+            --bg-primary-base: #000000;
+            --bg-secondary: rgba(10, 10, 10, 0.98);
+            --bg-card: rgba(20, 20, 20, 0.95);
+            --bg-hover: rgba(30, 30, 30, 0.95);
+            --text-primary: #FFFFFF;
+            --text-secondary: #F0F0F0;
+            --text-muted: #C7C7C7;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(238, 0, 0, 0.5);
+            
+            /* Modern Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 20px rgba(238, 0, 0, 0.15);
+            
+            /* Glassmorphism */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            
+            /* Gradients */
+            --gradient-red-start: rgba(238, 0, 0, 0.03);
+            --gradient-red-end: rgba(238, 0, 0, 0.01);
+        }
+
+        :root[data-theme="light"] {
+            /* Light Theme Colors (Red Hat Official Clean Style) */
+            --bg-primary-base: #FFFFFF;
+            --bg-secondary: rgba(255, 255, 255, 0.98);
+            --bg-card: rgba(250, 250, 250, 0.95);
+            --bg-hover: rgba(242, 242, 242, 0.95);
+            --text-primary: #000000;
+            --text-secondary: #151515;
+            --text-muted: #4D4D4D;
+            --border-color: rgba(0, 0, 0, 0.12);
+            --border-glow: rgba(238, 0, 0, 0.35);
+            
+            /* Light Theme Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.2);
+            --shadow-glow: 0 0 30px rgba(238, 0, 0, 0.15);
+            
+            /* Light Glassmorphism */
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.15);
+            
+            /* Light Gradients */
+            --gradient-red-start: rgba(238, 0, 0, 0.02);
+            --gradient-red-end: rgba(238, 0, 0, 0.01);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Smooth theme transitions */
+        body,
+        .top-header,
+        .sidebar,
+        .demo-card,
+        .nav-item,
+        .header-btn,
+        .demo-tag {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Red Hat Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary-base);
+            background-image: 
+                radial-gradient(circle at 20% 50%, var(--gradient-red-start) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, var(--gradient-red-end) 0%, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--rh-red);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            z-index: 1000;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-logo {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 50%;
+            padding: 6px;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .header-title {
+            font-family: 'Red Hat Display', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .header-subtitle {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+        }
+
+        .header-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-btn:hover,
+        .header-btn:focus {
+            background: white;
+            border-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            color: var(--rh-red);
+            outline: none;
+        }
+
+        .header-btn:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 2px;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            padding-top: 64px;
+            min-height: 100vh;
+        }
+
+        /* Left Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 64px;
+            width: var(--sidebar-width);
+            height: calc(100vh - 64px);
+            background: var(--bg-secondary);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+            padding: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar.resizing {
+            transition: none;
+        }
+
+        /* Resize Handle */
+        .sidebar-resize-handle {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 2px);
+            top: 64px;
+            width: 4px;
+            height: calc(100vh - 64px);
+            cursor: ew-resize;
+            z-index: 1002;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+            background: transparent;
+        }
+
+        .sidebar-resize-handle::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: 0;
+            width: 8px;
+            height: 100%;
+        }
+
+        .sidebar-resize-handle:hover,
+        .sidebar-resize-handle.dragging {
+            background: var(--rh-red);
+            box-shadow: 0 0 8px rgba(238, 0, 0, 0.5);
+        }
+
+        .sidebar.collapsed ~ .sidebar-resize-handle {
+            left: 58px;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .sidebar.collapsed .nav-item span,
+        .sidebar.collapsed .sidebar-section-title,
+        .sidebar.collapsed .nav-badge {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .nav-item {
+            padding: 0.625rem;
+            justify-content: center;
+            margin: 0.25rem auto;
+            width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            border-left: none;
+            border-radius: 8px;
+        }
+
+        .sidebar.collapsed .nav-item.active {
+            background: var(--rh-red);
+            color: white;
+        }
+
+        .sidebar.collapsed .nav-item:hover:not(.placeholder) {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            transform: none;
+        }
+
+        .sidebar.collapsed .nav-item.placeholder {
+            opacity: 0.4;
+        }
+
+        .sidebar.collapsed .nav-icon {
+            margin: 0;
+            width: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .sidebar.collapsed .sidebar-section {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .sidebar.collapsed .sidebar-section-title {
+            padding: 0;
+            margin: 0;
+            height: 0;
+        }
+
+        /* Tooltip for collapsed sidebar */
+
+        .sidebar.collapsed .nav-item::after {
+            content: attr(data-title);
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed .nav-item:hover::after {
+            opacity: 1;
+            visibility: visible;
+            left: 56px;
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            position: fixed;
+            top: 72px;
+            left: calc(var(--sidebar-width, 260px) - 14px);
+            width: 28px;
+            height: 28px;
+            background: var(--rh-red);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1003;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            font-size: 0.7rem;
+            box-shadow: 0 2px 12px rgba(238, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: toggleButtonPulse 2s ease-in-out 3;
+        }
+
+        @keyframes toggleButtonPulse {
+            0%, 100% {
+                box-shadow: 0 2px 12px rgba(238, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 4px 20px rgba(238, 0, 0, 0.9), 0 0 0 2px rgba(238, 0, 0, 0.3);
+            }
+        }
+
+        :root[data-theme="light"] .sidebar-toggle {
+            background: white;
+            color: var(--rh-red);
+            border-color: rgba(238, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        :root[data-theme="light"] .sidebar-toggle:hover {
+            background: var(--rh-red);
+            color: white;
+            border-color: var(--rh-red);
+            box-shadow: 0 4px 12px rgba(238, 0, 0, 0.3);
+        }
+
+        .sidebar-toggle.collapsed {
+            left: 46px;
+        }
+
+        .sidebar-toggle:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 16px rgba(238, 0, 0, 0.6);
+        }
+
+        .sidebar-toggle i {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-toggle.collapsed i {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-section-title {
+            font-family: 'Red Hat Display', sans-serif;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            padding: 0 1.5rem;
+            margin-bottom: 0.75rem;
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+
+        :root[data-theme="light"] .sidebar-section-title {
+            color: var(--text-muted);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            margin: 0.125rem 0.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            position: relative;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        .nav-item span {
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item:hover,
+        .nav-item:focus {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-left-color: var(--rh-red);
+            outline: none;
+        }
+
+        .nav-item:focus-visible {
+            outline: 2px solid var(--rh-red);
+            outline-offset: -2px;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(238, 0, 0, 0.15) 0%, transparent 100%);
+            color: var(--text-primary);
+            border-left-color: var(--rh-red);
+            font-weight: 600;
+        }
+
+        .nav-item.placeholder {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .nav-item.placeholder:hover {
+            background: transparent;
+            border-left-color: transparent;
+            transform: none;
+        }
+
+        :root[data-theme="light"] .nav-item.placeholder {
+            opacity: 0.55;
+        }
+
+        .nav-icon {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--rh-red);
+            color: white;
+            font-size: 0.625rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 2px 8px rgba(238, 0, 0, 0.3);
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+
+        .nav-badge.coming-soon {
+            background: rgba(106, 110, 115, 0.4);
+            color: var(--text-secondary);
+            box-shadow: none;
+        }
+
+        :root[data-theme="light"] .nav-badge.coming-soon {
+            background: rgba(106, 110, 115, 0.3);
+            color: var(--text-muted);
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 1.5rem;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .content.resizing {
+            transition: none;
+        }
+
+        .sidebar.collapsed ~ .content {
+            margin-left: 60px;
+            width: calc(100% - 60px);
+        }
+
+        .welcome-section {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .welcome-header {
+            margin-bottom: 2rem;
+        }
+
+        .welcome-header h1 {
+            font-family: 'Red Hat Display', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+            line-height: 1.3;
+        }
+
+        :root[data-theme="light"] .welcome-header h1 {
+            color: var(--text-primary);
+        }
+
+        .welcome-header p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Search and Filter Bar */
+        .search-filter-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--rh-red);
+            box-shadow: 0 0 0 3px rgba(238, 0, 0, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        .filter-dropdown {
+            padding: 0.875rem 2.5rem 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            min-width: 150px;
+        }
+
+        .filter-dropdown:hover {
+            border-color: var(--rh-red);
+        }
+
+        .filter-dropdown:focus {
+            outline: none;
+            border-color: var(--rh-red);
+            box-shadow: 0 0 0 3px rgba(238, 0, 0, 0.1);
+        }
+
+        .launchable-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.25rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .launchable-toggle:hover {
+            border-color: var(--rh-red);
+            color: var(--text-primary);
+        }
+
+        .launchable-toggle.active {
+            background: var(--rh-red);
+            border-color: var(--rh-red);
+            color: white;
+        }
+
+        .launchable-toggle i {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .search-filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input-wrapper {
+                min-width: 100%;
+            }
+
+            .filter-dropdown {
+                width: 100%;
+            }
+        }
+
+        /* Demo Grid */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .demo-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+        }
+
+        .demo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent, var(--border-glow), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .demo-card:not(.placeholder)::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .demo-card:not(.placeholder):hover::after {
+            left: 150%;
+        }
+
+        .demo-card:hover,
+        .demo-card:focus {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--rh-red);
+            outline: none;
+        }
+
+        .demo-card:not(.placeholder):hover,
+        .demo-card:not(.placeholder):focus {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(238, 0, 0, 0.4), 0 0 40px rgba(238, 0, 0, 0.2);
+            border-color: var(--rh-red);
+        }
+
+        :root[data-theme="light"] .demo-card:not(.placeholder):hover,
+        :root[data-theme="light"] .demo-card:not(.placeholder):focus {
+            box-shadow: 0 20px 60px rgba(238, 0, 0, 0.3), 0 0 40px rgba(238, 0, 0, 0.15);
+        }
+
+        .demo-card:focus-visible {
+            outline: 2px solid var(--rh-red);
+            outline-offset: 2px;
+        }
+
+        .demo-card:hover::before,
+        .demo-card:focus::before {
+            opacity: 1;
+        }
+
+        .demo-card.placeholder {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .demo-card.placeholder:hover {
+            transform: none;
+            border-color: var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        :root[data-theme="light"] .demo-card.placeholder {
+            opacity: 0.65;
+        }
+
+        .demo-card-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 1) 0%, rgba(30, 30, 30, 1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--rh-red);
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.4s ease;
+        }
+
+        .demo-card:not(.placeholder):hover .demo-card-image {
+            background: linear-gradient(135deg, rgba(20, 0, 0, 1) 0%, rgba(40, 10, 10, 1) 100%);
+        }
+
+        :root[data-theme="light"] .demo-card-image {
+            background: linear-gradient(135deg, rgba(248, 248, 248, 1) 0%, rgba(240, 240, 240, 1) 100%);
+        }
+
+        :root[data-theme="light"] .demo-card:not(.placeholder):hover .demo-card-image {
+            background: linear-gradient(135deg, rgba(255, 245, 245, 1) 0%, rgba(255, 235, 235, 1) 100%);
+        }
+
+        .demo-card-image::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(238, 0, 0, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .demo-card:hover .demo-card-image::before {
+            opacity: 1;
+        }
+
+        .demo-card-image i {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .demo-card:not(.placeholder):hover .demo-card-image i {
+            transform: scale(1.15) translateY(-4px);
+            filter: drop-shadow(0 8px 16px rgba(238, 0, 0, 0.5));
+        }
+
+        .demo-card-content {
+            padding: 1.25rem;
+        }
+
+        .demo-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            gap: 0.75rem;
+        }
+
+        .demo-card-title {
+            font-family: 'Red Hat Display', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+        }
+
+        .vote-button {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .vote-button:hover {
+            background: var(--rh-red);
+            border-color: var(--rh-red);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(238, 0, 0, 0.3);
+        }
+
+        .vote-button.voted {
+            background: var(--rh-red);
+            border-color: var(--rh-red);
+            color: white;
+            box-shadow: 0 0 15px rgba(238, 0, 0, 0.4);
+        }
+
+        .vote-button i {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .vote-button:hover i {
+            transform: scale(1.2);
+        }
+
+        .vote-button.voted i {
+            animation: votePulse 0.5s ease;
+        }
+
+        @keyframes votePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .vote-count {
+            font-weight: 700;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .demo-card:not(.placeholder):hover .demo-card-title {
+            color: var(--rh-red);
+            transform: translateX(4px);
+        }
+
+        :root[data-theme="light"] .demo-card-title {
+            color: var(--text-primary);
+        }
+
+        .demo-card-description {
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            margin-bottom: 0.875rem;
+            transition: color 0.3s ease;
+        }
+
+        .demo-card:not(.placeholder):hover .demo-card-description {
+            color: var(--text-primary);
+        }
+
+        :root[data-theme="light"] .demo-card-description {
+            color: var(--text-secondary);
+        }
+
+        .demo-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .demo-tag {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.6875rem;
+            padding: 0.3rem 0.65rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        :root[data-theme="light"] .demo-tag {
+            background: rgba(0, 0, 0, 0.06);
+            color: var(--text-secondary);
+        }
+
+        .demo-card:not(.placeholder):hover .demo-tag:not(.highlight) {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        :root[data-theme="light"] .demo-card:not(.placeholder):hover .demo-tag:not(.highlight) {
+            background: rgba(0, 0, 0, 0.12);
+            border-color: rgba(0, 0, 0, 0.25);
+        }
+
+        .demo-tag.highlight {
+            background: rgba(238, 0, 0, 0.18);
+            border-color: var(--rh-red);
+            color: var(--rh-red);
+            box-shadow: 0 0 10px rgba(238, 0, 0, 0.25);
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .demo-card:not(.placeholder):hover .demo-tag.highlight {
+            background: var(--rh-red);
+            color: white;
+            box-shadow: 0 0 20px rgba(238, 0, 0, 0.6), 0 4px 12px rgba(238, 0, 0, 0.4);
+            transform: scale(1.05);
+        }
+
+        :root[data-theme="light"] .demo-tag.highlight {
+            background: rgba(238, 0, 0, 0.12);
+            box-shadow: 0 0 10px rgba(238, 0, 0, 0.15);
+        }
+
+        :root[data-theme="light"] .demo-card:not(.placeholder):hover .demo-tag.highlight {
+            background: var(--rh-red);
+            color: white;
+            box-shadow: 0 0 20px rgba(238, 0, 0, 0.5), 0 4px 12px rgba(238, 0, 0, 0.3);
+        }
+
+        .demo-tag.coming-soon {
+            background: rgba(106, 110, 115, 0.2);
+            border-color: rgba(106, 110, 115, 0.5);
+            color: var(--text-muted);
+        }
+
+        :root[data-theme="light"] .demo-tag.coming-soon {
+            background: rgba(106, 110, 115, 0.15);
+            border-color: rgba(106, 110, 115, 0.4);
+        }
+
+        /* Demo Frame */
+        .demo-frame {
+            display: none;
+            width: 100%;
+            height: calc(100vh - 64px);
+            border: none;
+        }
+
+        .demo-frame.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .welcome-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .welcome-header p {
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(238, 0, 0, 0.6);
+            background-clip: padding-box;
+        }
+
+        :root[data-theme="light"] ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        :root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+            background: rgba(238, 0, 0, 0.6);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(0.98); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 2px 8px rgba(238, 0, 0, 0.3); }
+            50% { box-shadow: 0 2px 20px rgba(238, 0, 0, 0.6); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-badge:not(.coming-soon) {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        #themeIcon {
+            transition: transform 0.3s ease;
+        }
+
+        #themeIcon.rotating {
+            animation: rotate 0.5s ease-in-out;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-color);
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-family: 'Red Hat Display', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--rh-red);
+            color: white;
+            border-color: var(--rh-red);
+        }
+
+        .modal-body {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Header -->
+    <header class="top-header">
+        <div class="header-brand">
+            <div class="header-logo">
+                <img src="../assets/redhat.png" alt="Red Hat Logo">
+            </div>
+            <div>
+                <div class="header-title">Red Hat AI Showcase</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn" onclick="window.open('https://github.com/rh-ai-quickstart', '_blank')">
+                <i class="fas fa-book"></i>
+                AI Quickstart
+            </button>
+            <button class="header-btn" id="aboutToggle" onclick="openAboutModal()">
+                <i class="fas fa-info-circle"></i>
+                About
+            </button>
+            <button class="header-btn" id="themeToggleBtn" onclick="toggleTheme()">
+                <i class="fas fa-moon" id="themeIcon"></i>
+                <span id="themeText">Dark</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar Toggle Button -->
+        <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <!-- Left Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Featured Demos</div>
+                <a href="#" class="nav-item active" onclick="showHome(event)" data-title="Home">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#" class="nav-item" onclick="loadDemo('vlm', event)" data-title="Vision Language Model">
+                    <i class="fas fa-video nav-icon"></i>
+                    <span>Vision Language Model</span>
+                    <span class="nav-badge">Live</span>
+                </a>
+                <a href="#" class="nav-item" onclick="loadDemo('video-search', event)" data-title="Video Search & Analysis">
+                    <i class="fas fa-film nav-icon"></i>
+                    <span>Video Search & Analysis</span>
+                    <span class="nav-badge">Live</span>
+                </a>
+                <a href="#" class="nav-item" onclick="loadDemo('retail-analytics', event)" data-title="Smart Retail Analytics">
+                    <i class="fas fa-fire nav-icon"></i>
+                    <span>Smart Retail Analytics</span>
+                    <span class="nav-badge">Live</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">AI Models</div>
+                <a href="#" class="nav-item placeholder" data-title="Conversational AI">
+                    <i class="fas fa-comments nav-icon"></i>
+                    <span>Conversational AI</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Text Generation">
+                    <i class="fas fa-language nav-icon"></i>
+                    <span>Text Generation</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Sentiment Analysis">
+                    <i class="fas fa-brain nav-icon"></i>
+                    <span>Sentiment Analysis</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Document Intelligence">
+                    <i class="fas fa-search nav-icon"></i>
+                    <span>Document Intelligence</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Enterprise Solutions</div>
+                <a href="#" class="nav-item" onclick="loadDemo('guardrails', event)" data-title="AI Guardrails">
+                    <i class="fas fa-shield-alt nav-icon"></i>
+                    <span>AI Guardrails</span>
+                    <span class="nav-badge">Live</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Predictive Analytics">
+                    <i class="fas fa-chart-line nav-icon"></i>
+                    <span>Predictive Analytics</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Intelligent Automation">
+                    <i class="fas fa-robot nav-icon"></i>
+                    <span>Intelligent Automation</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="RAG Applications">
+                    <i class="fas fa-database nav-icon"></i>
+                    <span>RAG Applications</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Industry Use Cases</div>
+                <a href="#" class="nav-item" onclick="loadDemo('retail-analytics', event)" data-title="Smart Retail Analytics">
+                    <i class="fas fa-fire nav-icon"></i>
+                    <span>Smart Retail Analytics</span>
+                    <span class="nav-badge">Live</span>
+                </a>
+                <a href="#" class="nav-item" onclick="loadDemo('vlm', event)" data-title="Vision Language Model">
+                    <i class="fas fa-video nav-icon"></i>
+                    <span>Vision Language Model</span>
+                    <span class="nav-badge">Live</span>
+                </a>
+                <a href="#" class="nav-item" onclick="loadDemo('video-search', event)" data-title="Video Search & Analysis">
+                    <i class="fas fa-film nav-icon"></i>
+                    <span>Video Search & Analysis</span>
+                    <span class="nav-badge">Live</span>
+                </a>
+                <a href="#" class="nav-item" onclick="loadDemo('game', event)" data-title="Vision Gaming">
+                    <i class="fas fa-gamepad nav-icon"></i>
+                    <span>Vision Gaming</span>
+                    <span class="nav-badge">Live</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Manufacturing QC">
+                    <i class="fas fa-industry nav-icon"></i>
+                    <span>Manufacturing QC</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Healthcare AI">
+                    <i class="fas fa-heartbeat nav-icon"></i>
+                    <span>Healthcare AI</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Retail Intelligence">
+                    <i class="fas fa-shopping-cart nav-icon"></i>
+                    <span>Retail Intelligence</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+                <a href="#" class="nav-item placeholder" data-title="Financial Services">
+                    <i class="fas fa-landmark nav-icon"></i>
+                    <span>Financial Services</span>
+                    <span class="nav-badge coming-soon">Soon</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Sidebar Resize Handle -->
+        <div class="sidebar-resize-handle" id="sidebarResizeHandle"></div>
+
+        <!-- Main Content Area -->
+        <main class="content" id="mainContent">
+            <!-- Welcome Section (Home) -->
+            <div id="welcomeSection" class="welcome-section fade-in">
+                <div class="welcome-header">
+                    <h1>Build Your AI Applications with Red Hat AI</h1>
+                    <p>Get started with workflows and code samples to build AI applications from the ground up. 
+                    Explore enterprise-ready demos showcasing Red Hat AI technologies including OpenShift AI, 
+                    vLLM inference, and guardrail implementations.</p>
+                </div>
+
+                <!-- Search and Filter Bar -->
+                <div class="search-filter-bar">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Filter by text" oninput="filterDemos()">
+                    </div>
+                    <select class="filter-dropdown" id="sortFilter" onchange="filterDemos()">
+                        <option value="recent">Sort By: Most Recent</option>
+                        <option value="name">Sort By: Name</option>
+                        <option value="type">Sort By: Type</option>
+                    </select>
+                    <select class="filter-dropdown" id="publisherFilter" onchange="filterDemos()">
+                        <option value="all">Publisher: All</option>
+                        <option value="redhat">Red Hat</option>
+                        <option value="community">Community</option>
+                    </select>
+                    <select class="filter-dropdown" id="typeFilter" onchange="filterDemos()">
+                        <option value="all">Demo Type: All</option>
+                        <option value="vision">Vision AI</option>
+                        <option value="llm">Language Models</option>
+                        <option value="rag">RAG Applications</option>
+                        <option value="guardrails">Guardrails</option>
+                    </select>
+                    <div class="launchable-toggle" id="launchableToggle" onclick="toggleLaunchable()">
+                        <i class="fas fa-rocket"></i>
+                        <span>Launchable</span>
+                    </div>
+                </div>
+
+                <!-- Demo Cards Grid -->
+                <div class="demo-grid">
+                    <!-- Active Demo: VLM -->
+                    <a href="#" class="demo-card" onclick="loadDemo('vlm', event)" data-type="vision" data-publisher="redhat" data-launchable="true" data-demo-id="vlm">
+                        <div class="demo-card-image">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-header">
+                                <div class="demo-card-title">Vision Language Model Demo</div>
+                                <button type="button" class="vote-button" onclick="return handleVote(event, 'vlm');" title="Vote for this demo">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="vote-count">0</span>
+                                </button>
+                            </div>
+                            <div class="demo-card-description">
+                                Real-time video analysis powered by Qwen2-VL-2B with integrated Llama-Guard-3 
+                                content safety guardrails. Features live webcam processing and custom template support.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag highlight">Live Demo</span>
+                                <span class="demo-tag">vLLM</span>
+                                <span class="demo-tag">RHAIIS</span>
+                                <span class="demo-tag">Guardrails</span>
+                                <span class="demo-tag">Vision AI</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="#" class="demo-card" onclick="loadDemo('retail-analytics', event)" data-type="vision" data-publisher="redhat" data-launchable="true" data-demo-id="retail-analytics">
+                        <div class="demo-card-image">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-header">
+                                <div class="demo-card-title">Smart Retail Analytics - Heat Map</div>
+                                <button type="button" class="vote-button" onclick="return handleVote(event, 'retail-analytics');" title="Vote for this demo">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="vote-count">0</span>
+                                </button>
+                            </div>
+                            <div class="demo-card-description">
+                                Real-time customer traffic analysis with AI-powered heatmaps. Track visitor movement, 
+                                dwell time, and zone popularity using vision AI for retail optimization insights.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag highlight">Live Demo</span>
+                                <span class="demo-tag">Heatmap</span>
+                                <span class="demo-tag">Retail</span>
+                                <span class="demo-tag">Analytics</span>
+                                <span class="demo-tag">Vision AI</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Placeholder Demos -->
+                    <div class="demo-card placeholder">
+                        <div class="demo-card-image">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-title">Conversational AI Assistant</div>
+                            <div class="demo-card-description">
+                                Build intelligent chatbots using state-of-the-art LLMs with context awareness 
+                                and enterprise-grade security controls.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag coming-soon">Coming Soon</span>
+                                <span class="demo-tag">LLM</span>
+                                <span class="demo-tag">Chat</span>
+                                <span class="demo-tag">NLP</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-card placeholder">
+                        <div class="demo-card-image">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-title">RAG Application Builder</div>
+                            <div class="demo-card-description">
+                                Retrieval-Augmented Generation demo showcasing document processing, 
+                                vector search, and context-aware question answering.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag coming-soon">Coming Soon</span>
+                                <span class="demo-tag">RAG</span>
+                                <span class="demo-tag">Vector DB</span>
+                                <span class="demo-tag">Search</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-card placeholder">
+                        <div class="demo-card-image">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-title">Manufacturing Quality Control</div>
+                            <div class="demo-card-description">
+                                Computer vision for defect detection and quality assurance in manufacturing 
+                                environments with real-time alerts.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag coming-soon">Coming Soon</span>
+                                <span class="demo-tag">Computer Vision</span>
+                                <span class="demo-tag">QC</span>
+                                <span class="demo-tag">Industrial</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="#" class="demo-card" onclick="loadDemo('guardrails', event)" data-type="guardrails" data-publisher="redhat" data-launchable="true" data-demo-id="guardrails">
+                        <div class="demo-card-image">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-header">
+                                <div class="demo-card-title">AI Guardrails & Content Moderation</div>
+                                <button type="button" class="vote-button" onclick="return handleVote(event, 'guardrails');" title="Vote for this demo">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="vote-count">0</span>
+                                </button>
+                            </div>
+                            <div class="demo-card-description">
+                                Advanced content safety and moderation using Llama-Guard-3 guardrail model 
+                                for enterprise-grade content filtering with real-time vision analysis.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag highlight">Live Demo</span>
+                                <span class="demo-tag">Guardrails</span>
+                                <span class="demo-tag">Safety</span>
+                                <span class="demo-tag">Llama-Guard</span>
+                                <span class="demo-tag">Vision AI</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="#" class="demo-card" onclick="loadDemo('game', event)" data-type="vision" data-publisher="redhat" data-launchable="true" data-demo-id="game">
+                        <div class="demo-card-image">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-header">
+                                <div class="demo-card-title">Vision Gaming</div>
+                                <button type="button" class="vote-button" onclick="return handleVote(event, 'game');" title="Vote for this demo">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="vote-count">0</span>
+                                </button>
+                            </div>
+                            <div class="demo-card-description">
+                                Interactive AI-powered vision game featuring real-time challenges, emotion recognition, 
+                                and object detection. A fun demonstration of vision AI capabilities for all ages.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag highlight">Live Demo</span>
+                                <span class="demo-tag">Vision AI</span>
+                                <span class="demo-tag">Interactive</span>
+                                <span class="demo-tag">Gaming</span>
+                                <span class="demo-tag">vLLM</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="#" class="demo-card" onclick="loadDemo('video-search', event)" data-type="vision" data-publisher="redhat" data-launchable="true" data-demo-id="video-search">
+                        <div class="demo-card-image">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-header">
+                                <div class="demo-card-title">Video Search & Analysis</div>
+                                <button type="button" class="vote-button" onclick="return handleVote(event, 'video-search');" title="Vote for this demo">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="vote-count">0</span>
+                                </button>
+                            </div>
+                            <div class="demo-card-description">
+                                AI-powered video search and analysis tool that enables semantic search through video content, 
+                                automatic scene detection, and intelligent video understanding using vision language models.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag highlight">Live Demo</span>
+                                <span class="demo-tag">Vision AI</span>
+                                <span class="demo-tag">Search</span>
+                                <span class="demo-tag">Video Analysis</span>
+                                <span class="demo-tag">vLLM</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="demo-card placeholder">
+                        <div class="demo-card-image">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="demo-card-content">
+                            <div class="demo-card-title">Predictive Analytics Platform</div>
+                            <div class="demo-card-description">
+                                Time-series forecasting and predictive modeling for business intelligence 
+                                and operational optimization.
+                            </div>
+                            <div class="demo-card-tags">
+                                <span class="demo-tag coming-soon">Coming Soon</span>
+                                <span class="demo-tag">Analytics</span>
+                                <span class="demo-tag">Forecasting</span>
+                                <span class="demo-tag">ML</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demo Frame (Hidden by default) -->
+            <iframe id="demoFrame" class="demo-frame" frameborder="0"></iframe>
+        </main>
+    </div>
+
+    <!-- Modal for About -->
+    <div class="modal-overlay" id="aboutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    About This Project
+                </h3>
+                <button class="modal-close" onclick="closeAboutModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--rh-red); font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Red Hat AI Showcase Demo</h4>
+                    <p style="color: var(--text-secondary); margin: 0; line-height: 1.6; max-width: 450px; margin: 0 auto;">
+                        An interactive platform demonstrating enterprise-ready AI capabilities powered by Red Hat technologies. 
+                        Explore large language models, computer vision, content moderation, and intelligent applications in real-time demonstrations.
+                    </p>
+                </div>
+                
+                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                    <h4 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-user"></i>
+                        Author
+                    </h4>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
+                            <img src="../assets/michael.png" alt="Michael Yang" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--rh-red);">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Michael Yang</div>
+                                <div style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">Account Solution Architect</div>
+                                <a href="mailto:micyang@redhat.com" style="color: var(--rh-red); font-size: 0.8125rem; text-decoration: none; display: flex; align-items: center; gap: 0.35rem;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                    <i class="fas fa-envelope" style="font-size: 0.75rem;"></i>
+                                    micyang@redhat.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0; font-weight: 500;">
+                        Built with ❤️ of AI
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDemo = null;
+
+        function loadDemo(demoId, event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event?.target.closest('.nav-item')?.classList.add('active');
+
+            // Hide welcome section
+            document.getElementById('welcomeSection').style.display = 'none';
+
+            // Show demo frame
+            const demoFrame = document.getElementById('demoFrame');
+            demoFrame.classList.add('active');
+
+            // Load demo based on ID
+            if (demoId === 'vlm' || demoId === 'guardrails') {
+                demoFrame.src = 'vlm.html';
+                currentDemo = demoId;
+            } else if (demoId === 'game') {
+                demoFrame.src = 'game.html';
+                currentDemo = demoId;
+            } else if (demoId === 'video-search') {
+                demoFrame.src = 'video-search.html';
+                currentDemo = demoId;
+            } else if (demoId === 'retail-analytics') {
+                demoFrame.src = 'retail-analytics.html';
+                currentDemo = demoId;
+            }
+        }
+
+        function showHome(event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event?.target.closest('.nav-item')?.classList.add('active');
+
+            // Show welcome section
+            document.getElementById('welcomeSection').style.display = 'block';
+
+            // Hide demo frame
+            const demoFrame = document.getElementById('demoFrame');
+            demoFrame.classList.remove('active');
+            demoFrame.src = '';
+            currentDemo = null;
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('themeIcon');
+            const currentTheme = html.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Add rotation animation
+            themeIcon.classList.add('rotating');
+            setTimeout(() => {
+                themeIcon.classList.remove('rotating');
+            }, 500);
+            
+            // Apply theme
+            html.setAttribute('data-theme', newTheme);
+            
+            // Save to localStorage
+            localStorage.setItem('theme', newTheme);
+            
+            // Update button icon and text
+            updateThemeButton(newTheme);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            
+            sidebar.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('collapsed');
+            
+            // Save sidebar state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+
+        function initSidebar() {
+            // Restore sidebar state from localStorage
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                toggleBtn.classList.add('collapsed');
+            }
+
+            // Restore sidebar width from localStorage
+            const savedWidth = localStorage.getItem('sidebarWidth');
+            if (savedWidth && !isCollapsed) {
+                document.documentElement.style.setProperty('--sidebar-width', savedWidth + 'px');
+            }
+        }
+
+        // Sidebar Resize Functionality
+        function initSidebarResize() {
+            const resizeHandle = document.getElementById('sidebarResizeHandle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+
+            resizeHandle.addEventListener('mousedown', (e) => {
+                // Don't resize if sidebar is collapsed
+                if (sidebar.classList.contains('collapsed')) return;
+                
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = parseInt(getComputedStyle(sidebar).width);
+                
+                resizeHandle.classList.add('dragging');
+                sidebar.classList.add('resizing');
+                mainContent.classList.add('resizing');
+                document.body.style.cursor = 'ew-resize';
+                document.body.style.userSelect = 'none';
+                
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                
+                const deltaX = e.clientX - startX;
+                let newWidth = startWidth + deltaX;
+                
+                // Set min and max width constraints
+                const minWidth = 200;
+                const maxWidth = 500;
+                newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+                
+                // Update CSS variable
+                document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    resizeHandle.classList.remove('dragging');
+                    sidebar.classList.remove('resizing');
+                    mainContent.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    
+                    // Save the new width to localStorage
+                    const currentWidth = parseInt(getComputedStyle(sidebar).width);
+                    localStorage.setItem('sidebarWidth', currentWidth);
+                }
+            });
+        }
+
+        function updateThemeButton(theme) {
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            if (theme === 'light') {
+                themeIcon.className = 'fas fa-sun';
+                themeText.textContent = 'Light';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeText.textContent = 'Dark';
+            }
+        }
+
+        function initTheme() {
+            // Check for saved theme preference or default to 'dark'
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeButton(savedTheme);
+        }
+
+        // About modal functions
+        function openAboutModal() {
+            const modal = document.getElementById('aboutModal');
+            modal.classList.add('active');
+        }
+
+        function closeAboutModal() {
+            const modal = document.getElementById('aboutModal');
+            modal.classList.remove('active');
+        }
+
+        // Filter and search functionality
+        let launchableOnly = false;
+
+        function toggleLaunchable() {
+            launchableOnly = !launchableOnly;
+            const toggle = document.getElementById('launchableToggle');
+            toggle.classList.toggle('active');
+            filterDemos();
+        }
+
+        // Vote management
+        let votes = {};
+
+        function loadVotes() {
+            const savedVotes = localStorage.getItem('demoVotes');
+            if (savedVotes) {
+                votes = JSON.parse(savedVotes);
+            }
+            updateVoteUI();
+        }
+
+        function saveVotes() {
+            localStorage.setItem('demoVotes', JSON.stringify(votes));
+        }
+
+        function handleVote(event, demoId) {
+            // Stop the event from bubbling up to the parent link
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+            }
+            
+            console.log('Voting for:', demoId);
+            
+            // Initialize vote count if not exists
+            if (!votes[demoId]) {
+                votes[demoId] = 0;
+            }
+            
+            // Increment vote for this specific demo
+            votes[demoId]++;
+            
+            console.log('New vote count for', demoId, ':', votes[demoId]);
+            console.log('All votes:', votes);
+            
+            // Save to localStorage
+            saveVotes();
+            
+            // Update only the clicked button first
+            const button = event.currentTarget;
+            const voteCount = button.querySelector('.vote-count');
+            if (voteCount) {
+                voteCount.textContent = votes[demoId];
+            }
+            
+            // Add animation class
+            button.classList.add('voted');
+            setTimeout(() => {
+                button.classList.remove('voted');
+            }, 500);
+            
+            // Sort demos by votes after a brief delay
+            setTimeout(() => {
+                sortDemosByVotes();
+                // Update all UI after sorting
+                updateVoteUI();
+            }, 600);
+            
+            // Prevent any further event handling
+            return false;
+        }
+
+        function updateVoteUI() {
+            // Update all vote buttons with current vote counts
+            document.querySelectorAll('.demo-card').forEach(card => {
+                const demoId = card.dataset.demoId;
+                if (demoId) {
+                    const voteButton = card.querySelector('.vote-button');
+                    const voteCount = card.querySelector('.vote-count');
+                    if (voteCount) {
+                        const count = votes[demoId] || 0;
+                        voteCount.textContent = count;
+                        
+                        // Add voted class if has votes
+                        if (count > 0) {
+                            voteButton?.classList.add('voted');
+                        }
+                    }
+                }
+            });
+        }
+
+        function sortDemosByVotes() {
+            const demoGrid = document.querySelector('.demo-grid');
+            if (!demoGrid) return;
+            
+            // Get all demo cards (not placeholders)
+            const demoCards = Array.from(demoGrid.querySelectorAll('.demo-card:not(.placeholder)'));
+            const placeholderCards = Array.from(demoGrid.querySelectorAll('.demo-card.placeholder'));
+            
+            // Sort demo cards by vote count (descending)
+            demoCards.sort((a, b) => {
+                const voteA = votes[a.dataset.demoId] || 0;
+                const voteB = votes[b.dataset.demoId] || 0;
+                return voteB - voteA;
+            });
+            
+            // Clear grid
+            demoGrid.innerHTML = '';
+            
+            // Re-append sorted demo cards first
+            demoCards.forEach(card => {
+                demoGrid.appendChild(card);
+            });
+            
+            // Then append placeholder cards
+            placeholderCards.forEach(card => {
+                demoGrid.appendChild(card);
+            });
+        }
+
+        function filterDemos() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const sortBy = document.getElementById('sortFilter').value;
+            const publisher = document.getElementById('publisherFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            
+            const demoCards = document.querySelectorAll('.demo-grid .demo-card');
+            let visibleCount = 0;
+            
+            demoCards.forEach(card => {
+                const title = card.querySelector('.demo-card-title')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.demo-card-description')?.textContent.toLowerCase() || '';
+                const tags = Array.from(card.querySelectorAll('.demo-tag')).map(tag => tag.textContent.toLowerCase()).join(' ');
+                const isPlaceholder = card.classList.contains('placeholder');
+                const isLaunchable = card.dataset.launchable === 'true';
+                const cardType = card.dataset.type || '';
+                const cardPublisher = card.dataset.publisher || '';
+                
+                // Search filter
+                const matchesSearch = !searchText || 
+                    title.includes(searchText) || 
+                    description.includes(searchText) || 
+                    tags.includes(searchText);
+                
+                // Launchable filter
+                const matchesLaunchable = !launchableOnly || isLaunchable;
+                
+                // Type filter
+                const matchesType = type === 'all' || 
+                    (cardType && cardType.includes(type)) ||
+                    tags.includes(type);
+                
+                // Publisher filter
+                const matchesPublisher = publisher === 'all' || 
+                    cardPublisher === publisher;
+                
+                // Show/hide card
+                if (matchesSearch && matchesLaunchable && matchesType && matchesPublisher) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show "no results" message if needed
+            console.log(`Filtering complete: ${visibleCount} demos visible`);
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            const aboutModal = document.getElementById('aboutModal');
+            
+            if (e.target === aboutModal) {
+                closeAboutModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const aboutModal = document.getElementById('aboutModal');
+                
+                if (aboutModal.classList.contains('active')) {
+                    closeAboutModal();
+                }
+            }
+        });
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.demo) {
+                loadDemo(event.state.demo);
+            } else {
+                showHome();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadVotes();
+            sortDemosByVotes();
+            console.log('Red Hat AI Showcase Platform Initialized');
+        });
+
+        // Initialize theme immediately to prevent flash
+        initTheme();
+        
+        // Initialize sidebar state
+        if (document.getElementById('sidebar')) {
+            initSidebar();
+            initSidebarResize();
+        }
+        
+        // Initialize votes on page load
+        loadVotes();
+        sortDemosByVotes();
+    </script>
+</body>
+</html>
+
