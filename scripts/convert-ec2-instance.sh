@@ -208,7 +208,7 @@ collect_parameters_interactively() {
         echo "  - eu-west-1 (Ireland)"
         echo "  - ap-southeast-1 (Singapore)"
         echo ""
-        REGION=$(prompt_input "Enter AWS region" "us-east-2")
+        REGION=$(prompt_input "Enter AWS region" "ap-southeast-1")
     fi
     
     # Prompt for AWS credentials if not set
@@ -284,8 +284,12 @@ fi
 
 # Test AWS credentials
 print_info "Testing AWS credentials..."
-if ! aws ec2 describe-regions --region "$REGION" &> /dev/null; then
+AWS_TEST_OUTPUT=$(aws ec2 describe-regions --region "$REGION" 2>&1)
+if [ $? -ne 0 ]; then
     print_error "Failed to authenticate with AWS. Please check your credentials."
+    print_error "Debug Info:"
+    print_error "  Region: $REGION"
+    print_error "  AWS CLI Output: $AWS_TEST_OUTPUT"
     exit 1
 fi
 print_success "AWS credentials validated successfully"
@@ -299,7 +303,14 @@ list_instances() {
     INSTANCES=$(aws ec2 describe-instances \
         --region "$REGION" \
         --query 'Reservations[].Instances[].[InstanceId,Tags[?Key==`Name`].Value|[0],InstanceType,State.Name]' \
-        --output text)
+        --output text 2>&1)
+    
+    if [ $? -ne 0 ]; then
+        print_error "Failed to list instances in region $REGION"
+        print_error "Debug Info:"
+        print_error "  AWS CLI Output: $INSTANCES"
+        return 1
+    fi
     
     if [ -z "$INSTANCES" ]; then
         print_warn "No instances found in region $REGION"
@@ -325,7 +336,14 @@ select_instance_interactive() {
     INSTANCES=$(aws ec2 describe-instances \
         --region "$REGION" \
         --query 'Reservations[].Instances[].[InstanceId,Tags[?Key==`Name`].Value|[0],InstanceType,State.Name]' \
-        --output text)
+        --output text 2>&1)
+    
+    if [ $? -ne 0 ]; then
+        print_error "Failed to retrieve instances from region $REGION"
+        print_error "Debug Info:"
+        print_error "  AWS CLI Output: $INSTANCES"
+        return 1
+    fi
     
     if [ -z "$INSTANCES" ]; then
         print_error "No instances found in region $REGION"
@@ -425,6 +443,10 @@ get_instance_info() {
     
     if [ $? -ne 0 ]; then
         print_error "Instance $instance_id not found or you don't have permission to access it"
+        print_error "Debug Info:"
+        print_error "  Region: $REGION"
+        print_error "  Instance ID: $instance_id"
+        print_error "  AWS CLI Output: $INSTANCE_INFO"
         return 1
     fi
     
@@ -460,19 +482,29 @@ stop_instance() {
     
     print_info "Stopping instance $instance_id..."
     
-    if ! aws ec2 stop-instances \
+    STOP_OUTPUT=$(aws ec2 stop-instances \
         --region "$REGION" \
         --instance-ids "$instance_id" \
-        --output json &> /dev/null; then
+        --output json 2>&1)
+    
+    if [ $? -ne 0 ]; then
         print_error "Failed to stop instance"
+        print_error "Debug Info:"
+        print_error "  Region: $REGION"
+        print_error "  Instance ID: $instance_id"
+        print_error "  AWS CLI Output: $STOP_OUTPUT"
         return 1
     fi
     
     print_info "Waiting for instance to stop..."
-    if ! aws ec2 wait instance-stopped \
+    WAIT_OUTPUT=$(aws ec2 wait instance-stopped \
         --region "$REGION" \
-        --instance-ids "$instance_id"; then
+        --instance-ids "$instance_id" 2>&1)
+    
+    if [ $? -ne 0 ]; then
         print_error "Timeout waiting for instance to stop"
+        print_error "Debug Info:"
+        print_error "  AWS CLI Output: $WAIT_OUTPUT"
         return 1
     fi
     
@@ -484,15 +516,22 @@ stop_instance() {
 modify_instance_type() {
     local instance_id=$1
     local new_type=$2
-    
+    local aws_output
+
     print_info "Modifying instance type to $new_type..."
-    
-    if ! aws ec2 modify-instance-attribute \
-        --region "$REGION" \
-        --instance-id "$instance_id" \
-        --instance-type "{\"Value\": \"$new_type\"}" \
-        --output json &> /dev/null; then
-        print_error "Failed to modify instance type"
+    aws_output=$(aws ec2 modify-instance-attribute \
+                --region "$REGION" \
+                --instance-id "$instance_id" \
+                --instance-type "{\"Value\": \"$new_type\"}" 2>&1)
+
+    # Check the exit code of the aws command
+    if [[ $? -ne 0 ]]; then
+        print_error "Failed to modify instance type for $instance_id."
+        print_error "Debug Info:"
+        print_error "  Region: $REGION"
+        print_error "  Instance ID: $instance_id"
+        print_error "  Target Type: $new_type"
+        print_error "  AWS CLI Output: $aws_output"
         return 1
     fi
     
@@ -506,19 +545,29 @@ start_instance() {
     
     print_info "Starting instance $instance_id..."
     
-    if ! aws ec2 start-instances \
+    START_OUTPUT=$(aws ec2 start-instances \
         --region "$REGION" \
         --instance-ids "$instance_id" \
-        --output json &> /dev/null; then
+        --output json 2>&1)
+    
+    if [ $? -ne 0 ]; then
         print_error "Failed to start instance"
+        print_error "Debug Info:"
+        print_error "  Region: $REGION"
+        print_error "  Instance ID: $instance_id"
+        print_error "  AWS CLI Output: $START_OUTPUT"
         return 1
     fi
     
     print_info "Waiting for instance to start..."
-    if ! aws ec2 wait instance-running \
+    WAIT_OUTPUT=$(aws ec2 wait instance-running \
         --region "$REGION" \
-        --instance-ids "$instance_id"; then
+        --instance-ids "$instance_id" 2>&1)
+    
+    if [ $? -ne 0 ]; then
         print_error "Timeout waiting for instance to start"
+        print_error "Debug Info:"
+        print_error "  AWS CLI Output: $WAIT_OUTPUT"
         return 1
     fi
     
